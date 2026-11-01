@@ -6,9 +6,9 @@ window.SEED={
     nome:"Ciclo 1 · Novembre 2026",
     inizio:"2026-11-01",
     minimo:30,      // minuti: la seduta che non salta mai
-    slot:"10:00",   // prima di quest'ora la seduta è "nello slot"
+    slot:"13:00",   // prima di quest'ora la seduta è "nello slot"
     riposi:1,       // giorni di riposo a settimana che non spezzano la catena
-    coach:"Prima la costanza, poi il volume. Questo mese non conta quanto studi: conta che il minimo ci sia ogni giorno, prima delle 10, e che i numeri dicano la verità.",
+    coach:"Prima la costanza, poi il volume. Questo mese non conta quanto studi: conta che il minimo ci sia ogni giorno, entro la mattina (prima delle 13), e che i numeri dicano la verità.",
     blocchi:[
       {k:"riscaldamento",nome:"Riscaldamento",min:5,esercizi:true,
         obiettivo:"Mani sciolte, zero tensione. Lento e pulito.",
@@ -38,7 +38,7 @@ window.SEED={
     },
     calendario:[
       {n:1,titolo:"Solo il minimo",giornate:["minimo"],
-        obiettivo:"30 minuti ogni giorno, prima delle 10. Anche se hai più tempo: questa settimana si costruisce l'abitudine, non il volume."},
+        obiettivo:"30 minuti ogni giorno, entro la mattina (prima delle 13). Anche se hai più tempo: questa settimana si costruisce l'abitudine, non il volume."},
       {n:2,titolo:"+ Vocabolario",giornate:["minimo","normale"],
         obiettivo:"Il minimo resta sacro. Nei giorni con più tempo si sblocca la giornata normale: si aggiunge il vocabolario."},
       {n:3,titolo:"+ Visualizzazione",giornate:["minimo","normale","buona"],
