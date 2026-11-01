@@ -1,0 +1,679 @@
+<!doctype html><html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PRACTICE</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PRACTICE">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E4EEDC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="iniziale.js"></script>
+<script src="store.js"></script>
+<style>
+/* Layout: "cronometro su campo". Terza gemella della famiglia: ENLIST è carta e inchiostro del mese con Archivo larga,
+   TRAIN è fondo nero e blocchi di colore con Archivo stretta; PRACTICE è verde campo su carta chiara con Archivo a larghezza
+   normale, numeri enormi e sottili da cronometro, un solo colore di segnale (lime) per la catena dei giorni. */
+:root{
+  --paper:#E4EEDC; --card:#F1F6EC; --ink:#14281C; --acc:#1D5A35; --hi:#CFEA5B; --hi-ink:#14281C;
+  --mute:rgba(20,40,28,.62); --line:rgba(20,40,28,.16); --soft:rgba(20,40,28,.06); --warn:#A3361B;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#0D1510; --card:#142019; --ink:#E3ECDD; --acc:#8BD9A6; --hi:#CFEA5B; --hi-ink:#14281C;
+  --mute:rgba(227,236,221,.62); --line:rgba(227,236,221,.16); --soft:rgba(227,236,221,.06); --warn:#FF8A6B;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:Archivo,-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;line-height:1.42;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{padding:env(safe-area-inset-top,0) 0 calc(92px + env(safe-area-inset-bottom,0))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+main{max-width:560px;margin:0 auto;padding:4px 16px 24px}
+h1,h2,h3{font-weight:850;text-transform:uppercase;margin:0;letter-spacing:-.01em;line-height:.95}
+h1{font-size:34px}
+h2{font-size:19px;margin-bottom:10px}
+h3{font-size:14px}
+p{margin:0 0 10px}
+.cap{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.mute{color:var(--mute)}
+.num{font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.04em;line-height:.9}
+.nota{border-left:2px solid var(--acc);padding:2px 0 2px 10px;margin:8px 0;color:var(--ink)}
+section{padding:18px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+
+/* testata */
+#top{max-width:560px;margin:0 auto;padding:12px 16px 0;display:flex;justify-content:space-between;align-items:center}
+#top .word{font-weight:900;text-transform:uppercase;letter-spacing:.02em;font-size:13px}
+#sync{font-size:11px;color:var(--mute);display:flex;gap:6px;align-items:center}
+#sync i{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block}
+#sync.warn i{background:var(--warn)}
+
+.datehead{display:flex;align-items:flex-end;gap:14px;padding:14px 0 6px}
+.datehead .big{font-size:96px}
+.datehead .side{padding-bottom:8px}
+.datehead .side b{display:block;font-weight:850;text-transform:uppercase;font-size:19px;line-height:1}
+.chainbadge{display:inline-flex;align-items:center;gap:6px;background:var(--hi);color:var(--hi-ink);border-radius:99px;padding:3px 10px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
+
+/* pulsanti e pillole */
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:99px;padding:10px 16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
+.btn.full{background:var(--ink);color:var(--paper)}
+.btn.wide{width:100%}
+.btn.hi{background:var(--hi);color:var(--hi-ink);border-color:var(--hi)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.danger{border-color:var(--warn);color:var(--warn)}
+.link{background:none;border:0;padding:8px 0;color:var(--mute);text-decoration:underline;text-underline-offset:3px;min-height:40px}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border:1.5px solid var(--ink);border-radius:99px;padding:8px 14px;background:transparent;font-weight:650;min-height:40px}
+.pill.on{background:var(--ink);color:var(--paper)}
+.pill:disabled{opacity:.35;border-style:dashed}
+.pill small{font-weight:400;opacity:.75}
+.row{display:flex;gap:10px;align-items:center}
+.row.sp{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:10px}
+
+/* righe dei blocchi */
+.blist{list-style:none;margin:8px 0 0;padding:0}
+.blist li{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.blist li:first-child{border-top:0}
+.blist .m{font-size:26px;font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
+.blist .m small{font-size:11px;font-weight:600}
+.blist b{text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.02em}
+.blist .f{color:var(--mute);font-size:13px}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:var(--soft);margin-left:6px;vertical-align:2px}
+
+.card{background:var(--card);border-radius:18px;padding:16px;margin:10px 0}
+.card.hi{background:var(--hi);color:var(--hi-ink)}
+.card.hi .mute,.card.hi .cap{color:rgba(20,40,28,.66)}
+.check{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;min-height:48px}
+.check:first-of-type{border-top:0}
+.check .box{width:24px;height:24px;border:1.5px solid var(--ink);border-radius:7px;flex:none;display:grid;place-items:center;font-weight:900}
+.check.on .box{background:var(--ink);color:var(--paper)}
+
+/* seduta in corso */
+.segs{display:flex;gap:4px;margin:10px 0 14px}
+.segs span{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.segs span.done{background:var(--acc)}
+.segs span.on{background:var(--ink)}
+.bname{font-size:44px;margin:4px 0 10px}
+.timer{font-size:clamp(84px,28vw,140px);text-align:center;margin:16px 0 2px}
+.timer.over{color:var(--acc)}
+.tsub{text-align:center;color:var(--mute);margin-bottom:16px}
+.ctrl{display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:16px}
+.round{width:84px;height:84px;border-radius:50%;border:0;background:var(--ink);color:var(--paper);font-weight:800;text-transform:uppercase;font-size:13px;letter-spacing:.04em}
+.round.paused{background:var(--hi);color:var(--hi-ink)}
+.distr{display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid var(--ink);border-radius:20px;background:transparent;padding:10px 14px;min-width:96px}
+.distr b{font-size:26px;font-weight:300;line-height:1}
+.distr span{font-size:11px;text-transform:uppercase;font-weight:700;letter-spacing:.05em}
+.bpmrow{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0}
+.bpmrow .v{font-size:56px;min-width:120px;text-align:center}
+.bpmrow .v small{display:block;font-size:11px;letter-spacing:.08em;font-weight:700;color:var(--mute)}
+.step{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--ink);background:transparent;font-weight:700}
+.metro{display:flex;justify-content:center;margin-bottom:6px}
+.metro .btn.on{background:var(--acc);border-color:var(--acc);color:var(--paper)}
+textarea,input[type=text],input[type=number],input[type=time],input[type=email],input[type=password],select{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;font-size:16px}
+textarea{min-height:76px;resize:vertical}
+
+/* calendario */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal .h{font-size:10px;text-align:center;color:var(--mute);text-transform:uppercase;font-weight:700;letter-spacing:.06em}
+.cal .d{aspect-ratio:1;border-radius:12px;border:0;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;position:relative;padding:0;font-size:14px}
+.cal .d small{font-size:9px;opacity:.75;line-height:1}
+.cal .d.ok{background:var(--ink);color:var(--paper)}
+.cal .d.part{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.cal .d.rest{background:transparent;border:1.5px dashed var(--line);color:var(--mute)}
+.cal .d.fut{opacity:.4}
+.cal .d.today{box-shadow:inset 0 0 0 2px var(--acc)}
+.cal .d.ok.today{box-shadow:0 0 0 2px var(--hi)}
+.cal .d.sel{outline:2px solid var(--hi);outline-offset:2px}
+.cal .d .dot{position:absolute;top:5px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--hi)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--mute);margin-top:10px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:4px;vertical-align:-1px;margin-right:4px;background:var(--soft)}
+.legend i.ok{background:var(--ink)}.legend i.part{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.legend i.dot{width:6px;height:6px;border-radius:50%;background:var(--hi);vertical-align:1px}
+
+/* metro */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--card);border-radius:16px;padding:12px 14px}
+.kpi .v{font-size:44px}
+.kpi .v small{font-size:15px;font-weight:500;letter-spacing:0}
+.kpi .l{font-size:12px;color:var(--mute);margin-top:4px}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:110px 1fr 44px;gap:10px;align-items:center;font-size:13px}
+.bar .t{height:10px;border-radius:5px;background:var(--soft);overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--ink);border-radius:5px}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums}
+svg text{font-family:Archivo,sans-serif}
+.ex{padding:12px 0;border-top:1px solid var(--line)}
+.ex:first-child{border-top:0}
+
+/* sessione nel dettaglio del giorno */
+.sess{padding:10px 0;border-top:1px solid var(--line)}
+.sess:first-child{border-top:0}
+.sess ul{margin:6px 0;padding-left:18px}
+
+/* barra in basso */
+#tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0));display:flex;gap:4px;background:var(--ink);padding:5px;border-radius:99px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:5}
+#tabs button{border:0;background:transparent;color:var(--paper);padding:10px 14px;border-radius:99px;font-weight:750;font-size:12px;text-transform:uppercase;letter-spacing:.05em;min-height:44px}
+#tabs button.on{background:var(--paper);color:var(--ink)}
+#tabs button .liv{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--hi);margin-left:5px;vertical-align:1px}
+
+dialog{border:0;border-radius:22px;padding:0;background:var(--paper);color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(10,20,14,.5)}
+.frm{padding:20px;display:flex;flex-direction:column;gap:12px}
+.frm label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:650}
+.frm label.inline{flex-direction:row;align-items:center;gap:10px}
+.frm label.inline input{width:22px;height:22px}
+.frm .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frm .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0));background:var(--hi);color:var(--hi-ink);padding:10px 16px;border-radius:99px;font-weight:700;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+#toast.on{opacity:1}
+.login{max-width:420px;margin:30px auto}
+.login form{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.edit{background:none;border:0;padding:6px 0;text-align:left;width:100%}
+</style></head><body>
+<header id="top"><span class="word">practice</span><span id="sync"><i></i><span>…</span></span></header>
+<main id="main"></main>
+<nav id="tabs" hidden></nav>
+<dialog id="dlg"></dialog>
+<div id="toast"></div>
+<script>
+/* ===== utilità ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>{d=d||new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());};
+const parseD=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d);};
+const diffDays=(a,b)=>Math.round((parseD(b)-parseD(a))/864e5);
+const hhmm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
+const GG=["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
+const MESI=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const FOCUS=["","Dispersa","A tratti","Dentro"];
+const GIORNATE={minimo:"Minimo",normale:"Normale",buona:"Buona"};
+const P_=Store.DEMO?"practice-demo-":"practice-";
+const loadLS=k=>{try{return JSON.parse(localStorage.getItem(P_+k)||"null");}catch(e){return null;}};
+const saveLS=(k,v)=>{try{localStorage.setItem(P_+k,JSON.stringify(v));}catch(e){}};
+const mins=n=>Math.round(n||0);
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),2200);}
+
+/* ===== stato ===== */
+const S={sedute:{},esercizi:{},piano:null};
+const ui={tab:loadLS("tab")||"oggi",month:ymd().slice(0,7),sel:ymd(),giornata:null,rit:{},again:false};
+let LIVE=loadLS("live");
+const saveLive=()=>saveLS("live",LIVE);
+
+/* ===== il piano ===== */
+const P=()=>S.piano||SEED.piano;
+function weekOf(date){const p=P();const d=diffDays(p.inizio,date);if(d<0)return null;return p.calendario[Math.min(Math.floor(d/7),p.calendario.length-1)];}
+const blockOf=k=>P().blocchi.find(b=>b.k===k);
+const dayBlocks=g=>(P().giornate[g]||[]).map(blockOf).filter(Boolean);
+const dayMin=g=>dayBlocks(g).reduce((a,b)=>a+(+b.min||0),0);
+const exList=k=>Object.entries(S.esercizi).map(([id,e])=>({id,...e})).filter(e=>!e.archiviato&&(!k||e.blocco===k)).sort((a,b)=>(a.ordine||99)-(b.ordine||99));
+function focusEx(k){const l=exList(k);return (l.find(e=>e.focus)||l[0]||{}).id||null;}
+
+/* ===== giorni, catena, numeri ===== */
+const sessOn=date=>Object.entries(S.sedute).map(([id,s])=>({id,...s})).filter(s=>s.data===date).sort((a,b)=>(a.inizio||"").localeCompare(b.inizio||""));
+const inSlot=s=>!!s.inizio&&hhmm(new Date(s.inizio))<P().slot;
+const mondayOf=date=>addDays(date,-((parseD(date).getDay()+6)%7));
+function restsUpTo(date){let n=0;for(let d=mondayOf(date);d<=date;d=addDays(d,1))if(sessOn(d).some(s=>s.giornata==="riposo"))n++;return n;}
+function dayInfo(date){
+  const ss=sessOn(date),work=ss.filter(s=>s.giornata!=="riposo");
+  const tot=work.reduce((a,s)=>a+(s.totale||0),0);
+  const rest=ss.some(s=>s.giornata==="riposo");
+  const ok=tot>=P().minimo-0.5;
+  return {ss,work,tot,rest,ok,restOk:rest&&!ok&&restsUpTo(date)<=P().riposi,slot:work.some(inSlot)};
+}
+const kept=i=>i.ok||i.restOk;
+function chain(){let d=ymd();if(!kept(dayInfo(d)))d=addDays(d,-1);let n=0;while(n<4000&&kept(dayInfo(d))){n++;d=addDays(d,-1);}return n;}
+function bestChain(){const dates=Object.values(S.sedute).map(s=>s.data).sort();if(!dates.length)return 0;let best=0,cur=0;for(let d=dates[0];d<=ymd();d=addDays(d,1)){cur=kept(dayInfo(d))?cur+1:0;best=Math.max(best,cur);}return best;}
+function exHist(id){
+  const e=S.esercizi[id]||{},by={};
+  for(const s of Object.values(S.sedute))for(const b of s.blocchi||[])if(b.es===id&&b.bpm)by[s.data]=Math.max(by[s.data]||0,+b.bpm);
+  const pts=Object.entries(by).map(([data,bpm])=>({data,bpm})).sort((a,b)=>a.data.localeCompare(b.data));
+  return {base:e.base&&e.base.bpm?e.base:null,pts};
+}
+function lastBpm(id){const h=exHist(id);return h.pts.length?h.pts[h.pts.length-1].bpm:(h.base?h.base.bpm:null);}
+
+/* ===== metronomo e segnali (Web Audio: nessun file da scaricare) ===== */
+const Audio_={ctx:null,get(){if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)();if(this.ctx.state!=="running")this.ctx.resume();return this.ctx;}};
+const Metro={on:false,bpm:80,next:0,beat:0,timer:null,
+  start(bpm){const c=Audio_.get();this.bpm=bpm;this.on=true;this.beat=0;this.next=c.currentTime+.08;clearInterval(this.timer);this.timer=setInterval(()=>this.tick(),25);},
+  stop(){this.on=false;clearInterval(this.timer);},
+  set(bpm){this.bpm=bpm;},
+  tick(){const c=Audio_.ctx;while(this.next<c.currentTime+.12){click(this.next,this.beat%4===0);this.next+=60/this.bpm;this.beat++;}}
+};
+function click(t,acc,f){const c=Audio_.ctx,o=c.createOscillator(),g=c.createGain();o.frequency.value=f||(acc?1650:1100);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(acc?.9:.5,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+.06);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.08);}
+function beep(){try{const c=Audio_.get(),t=c.currentTime;[0,.18,.36].forEach((d,i)=>click(t+d,true,i===2?1320:880));}catch(e){}if(navigator.vibrate)navigator.vibrate([200,100,200]);}
+/* lo schermo resta acceso durante la seduta */
+let lock=null;
+async function wake(){try{if(LIVE&&"wakeLock" in navigator&&!lock){lock=await navigator.wakeLock.request("screen");lock.addEventListener("release",()=>{lock=null;});}}catch(e){}}
+function unwake(){try{lock&&lock.release();}catch(e){}lock=null;}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")wake();});
+
+/* ===== seduta in corso ===== */
+const elapsed=b=>b.ms+(b.run?Date.now()-b.run:0);
+function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));return pad(Math.floor(s/60))+":"+pad(s%60);}
+function startLive(g){
+  const bl=dayBlocks(g).map(b=>{const es=b.esercizi?focusEx(b.k):null;return {k:b.k,nome:b.nome,prev:+b.min,ms:0,run:null,distr:0,es,bpm:es&&S.esercizi[es]&&S.esercizi[es].bpm?(lastBpm(es)||80):null,focus:0,nota:"",done:false};});
+  if(!bl.length)return;
+  LIVE={data:ymd(),giornata:g,settimana:(weekOf(ymd())||{}).n||null,inizio:new Date().toISOString(),i:0,ending:false,blocchi:bl};
+  bl[0].run=Date.now();saveLive();ui.rit={};ui.again=false;wake();render();
+}
+const cur=()=>LIVE.blocchi[LIVE.i];
+function pauseCur(){const b=cur();if(b.run){b.ms+=Date.now()-b.run;b.run=null;}}
+async function finishLive(){
+  pauseCur();Metro.stop();
+  const bl=LIVE.blocchi.filter(b=>b.done||b.ms>30000).map(b=>{
+    const e=b.es&&S.esercizi[b.es];
+    return {k:b.k,nome:b.nome,prev:b.prev,min:Math.round(b.ms/6000)/10,es:b.es||null,esNome:e?e.nome:null,bpm:e&&e.bpm&&b.bpm?b.bpm:null,focus:b.focus||null,distr:b.distr,nota:b.nota||""};
+  });
+  const doc={data:LIVE.data,giornata:LIVE.giornata,settimana:LIVE.settimana,inizio:LIVE.inizio,fine:new Date().toISOString(),blocchi:bl,totale:Math.round(bl.reduce((a,b)=>a+b.min,0)*10)/10};
+  LIVE=null;saveLive();unwake();
+  if(bl.length){await Store.collection("pratica_sedute").add(doc);toast("Seduta salvata · "+mins(doc.totale)+"'");}
+  else toast("Seduta chiusa senza minuti: non salvata");
+  render();
+}
+
+/* ===== schermata OGGI ===== */
+function dateHead(t){
+  const d=parseD(t),w=weekOf(t),c=chain();
+  return `<div class="datehead"><span class="num big">${d.getDate()}</span><div class="side"><span class="cap">${GG[d.getDay()]}</span><b>${MESI[d.getMonth()]}</b>
+    ${w?`<span class="cap">Settimana ${w.n} · ${esc(w.titolo)}</span>`:""}</div></div>
+    ${c?`<span class="chainbadge">● ${c} ${c===1?"giorno":"giorni"} di fila</span>`:""}`;
+}
+function vOggi(){
+  const t=ymd();let h=dateHead(t);
+  if(LIVE&&LIVE.data!==t){
+    const d=parseD(LIVE.data);
+    return h+`<section><div class="card"><h2>Seduta aperta</h2><p>La seduta di ${GG[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]} è rimasta aperta. Salvala con i minuti fatti, oppure scartala.</p>
+      <div class="row"><button class="btn full" data-act="stale-save">Salvala</button><button class="btn" data-act="stale-drop">Scartala</button></div></div></section>`;
+  }
+  if(LIVE)return h+vLive();
+  const info=dayInfo(t);
+  if(info.ss.length&&!ui.again)return h+vDone(info);
+  return h+vStart(t);
+}
+function vStart(t){
+  const p=P(),w=weekOf(t);
+  if(!w)return `<section><p>Il ciclo parte il ${parseD(p.inizio).getDate()} ${MESI[parseD(p.inizio).getMonth()]}.</p></section>`;
+  if(!ui.giornata||!w.giornate.includes(ui.giornata))ui.giornata=w.giornate[0];
+  const g=ui.giornata,bl=dayBlocks(g);
+  const pills=Object.keys(GIORNATE).map(k=>{
+    const open=w.giornate.includes(k),from=p.calendario.find(x=>x.giornate.includes(k));
+    return `<button class="pill ${k===g?"on":""}" data-act="giornata" data-g="${k}" ${open?"":"disabled"}>${GIORNATE[k]} ${dayMin(k)}' ${open?"":`<small>· sett. ${from?from.n:"–"}</small>`}</button>`;
+  }).join("");
+  const RIT=[["tel","Telefono in modalità concentrazione, lontano"],["pronta","Chitarra accordata, metronomo e cuffie pronti"],["chiaro","So cosa faccio: ho letto i blocchi qui sotto"]];
+  const allRit=RIT.every(([k])=>ui.rit[k]);
+  const now=new Date(),late=hhmm(now)>=p.slot;
+  const rLeft=p.riposi-restsUpTo(t);
+  return `<section><div class="nota">${esc(w.obiettivo)}</div></section>
+  <section><div class="cap" style="margin-bottom:8px">Com'è la giornata</div><div class="pills">${pills}</div>
+    <ul class="blist">${bl.map(b=>`<li><span class="m">${b.min}<small>'</small></span><div><b>${esc(b.nome)}</b><div class="f">${esc(b.fonte)}</div></div></li>`).join("")}</ul></section>
+  <section><div class="cap">Rituale d'inizio</div>
+    ${RIT.map(([k,l])=>`<button class="check ${ui.rit[k]?"on":""}" data-act="rit" data-k="${k}"><span class="box">${ui.rit[k]?"✓":""}</span>${l}</button>`).join("")}
+    ${late?`<p class="mute" style="margin-top:8px">Sono le ${hhmm(now)}, oltre lo slot delle ${p.slot}. Fallo lo stesso: conta per la catena, e il dato "prima delle ${p.slot}" dirà la verità.</p>`:""}
+    <button class="btn full wide" style="margin-top:10px;min-height:56px;font-size:17px" data-act="start" ${allRit?"":"disabled"}>Inizia · ${dayMin(g)} minuti</button>
+  </section>
+  <section class="row sp"><button class="link" data-act="manual" data-d="${t}">Segna una seduta fatta senza app</button>
+    ${rLeft>0?`<button class="link" data-act="rest" data-d="${t}">Oggi riposo</button>`:""}</section>`;
+}
+function vDone(info){
+  const p=P(),c=chain();
+  if(!info.work.length&&info.rest)return `<section><div class="card"><h2>Giorno di riposo</h2><p class="mute">${info.restOk?"Programmato: la catena tiene.":"Oltre i riposi della settimana: la catena si ferma qui."}</p>
+    <div class="row"><button class="btn" data-act="unrest" data-d="${ymd()}">Annulla il riposo</button><button class="btn" data-act="again">Studio lo stesso</button></div></div></section>`;
+  return `<section><div class="card ${info.ok?"hi":""}">
+    <div class="cap">${info.ok?"Minimo fatto":"Oggi finora"}</div>
+    <div class="num" style="font-size:88px">${mins(info.tot)}<small style="font-size:22px;font-weight:500">'</small></div>
+    <p>${info.ok?`Il minimo di ${p.minimo}' c'è.`:`Mancano ${mins(p.minimo-info.tot)}' al minimo.`} ${info.slot?`Prima delle ${p.slot} ✓`:`Fuori slot (dopo le ${p.slot}).`}</p>
+    ${c?`<p><b>${c} ${c===1?"giorno":"giorni"} di fila.</b></p>`:""}
+  </div>
+  ${info.work.map(sessHtml).join("")}
+  <div class="row" style="margin-top:12px"><button class="btn" data-act="again">Un'altra seduta</button><button class="btn" data-act="tab" data-t="metro">Vedi i numeri</button></div></section>`;
+}
+function vLive(){
+  const L=LIVE,b=cur(),bd=blockOf(b.k)||{},n=L.blocchi.length,last=L.i===n-1;
+  const e=b.es&&S.esercizi[b.es];
+  let h=`<section><div class="segs">${L.blocchi.map((x,j)=>`<span class="${j<L.i?"done":j===L.i?"on":""}"></span>`).join("")}</div>
+    <div class="cap">Blocco ${L.i+1} di ${n} · giornata ${GIORNATE[L.giornata]||""}</div>
+    <h1 class="bname">${esc(b.nome)}</h1>
+    <p><b>${esc(bd.obiettivo||"")}</b></p>
+    <p class="mute">${esc(bd.fonte||"")}</p>
+    ${bd.come?`<div class="nota">${esc(bd.come)}</div>`:""}`;
+  if(!L.ending){
+    const ms=elapsed(b),rem=b.prev*60000-ms;
+    h+=`<div id="timer" class="timer num ${rem<0?"over":""}">${rem>=0?fmt(rem):"+"+fmt(-rem)}</div>
+      <div class="tsub">di ${b.prev}:00${rem<0?" · tempo pieno, chiudi quando vuoi":""}</div>
+      <div class="ctrl"><button class="round ${b.run?"":"paused"}" data-act="toggle">${b.run?"Pausa":"Avvia"}</button>
+        <button class="distr" data-act="distr"><b>${b.distr}</b><span>Ero altrove</span></button></div>
+      <p class="mute" style="text-align:center;font-size:12px">Tocca "Ero altrove" quando ti accorgi di esserti distratta. È un dato, non un voto.</p>`;
+    h+=exPicker(b,e);
+    h+=`<button class="btn full wide" style="min-height:54px;margin-top:14px" data-act="endblock">Fine blocco →</button>
+      <div class="row sp"><button class="link" data-act="closehere">Chiudi qui la seduta</button><button class="link" data-act="abort">Annulla seduta</button></div>`;
+  }else{
+    h+=`<div class="card"><h2>Com'è andata?</h2>
+      <div class="cap" style="margin:4px 0 8px">Concentrazione</div>
+      <div class="pills">${[1,2,3].map(v=>`<button class="pill ${b.focus===v?"on":""}" data-act="focus" data-v="${v}">${FOCUS[v]}</button>`).join("")}</div>
+      ${e&&e.bpm?`<div class="cap" style="margin:16px 0 0">BPM più alto suonato pulito · ${esc(e.nome)}</div>${bpmStepper(b)}`:""}
+      <div class="cap" style="margin:14px 0 6px">Nota (facoltativa)</div>
+      <textarea id="bnota" placeholder="Cosa ha funzionato, cosa è da sbloccare">${esc(b.nota)}</textarea>
+      <button class="btn full wide" style="min-height:54px;margin-top:12px" data-act="next">${last?"Chiudi la seduta ✓":"Avanti → "+esc(L.blocchi[L.i+1].nome)}</button>
+      <button class="link" data-act="back">← Torna al timer</button></div>`;
+  }
+  return h+"</section>";
+}
+function exPicker(b,e){
+  const l=exList(b.k);if(!l.length)return "";
+  let h=`<div class="card"><div class="cap" style="margin-bottom:8px">Esercizio</div><div class="pills">${l.map(x=>`<button class="pill ${x.id===b.es?"on":""}" data-act="pickex" data-id="${x.id}">${esc(x.nome)}</button>`).join("")}</div>`;
+  if(e){
+    const lb=lastBpm(b.es);
+    if(e.nota)h+=`<div class="nota">${esc(e.nota)}</div>`;
+    if(e.bpm){
+      h+=bpmStepper(b);
+      h+=`<p class="mute" style="text-align:center;font-size:13px">${lb?`Ultimo pulito: ${lb}`:"Primo giro"}${e.obiettivo?` · obiettivo ${e.obiettivo}`:""}</p>
+        <div class="metro"><button class="btn ${Metro.on?"on":""}" data-act="metro">${Metro.on?"■ Ferma metronomo":"▶ Metronomo"}</button></div>`;
+    }
+  }
+  return h+"</div>";
+}
+const bpmStepper=b=>`<div class="bpmrow"><button class="step" data-act="bpm" data-v="-5">−5</button><button class="step" data-act="bpm" data-v="-1">−1</button>
+  <div class="v num">${b.bpm||"–"}<small>BPM</small></div><button class="step" data-act="bpm" data-v="1">+1</button><button class="step" data-act="bpm" data-v="5">+5</button></div>`;
+function sessHtml(s){
+  const t=s.inizio?hhmm(new Date(s.inizio)):"";
+  return `<div class="sess"><div class="row sp"><b>${t?t+" · ":""}${mins(s.totale)}' ${s.manuale?'<span class="tag">a mano</span>':""}${inSlot(s)?'<span class="tag">nello slot</span>':""}</b>
+    <button class="link" data-act="delsess" data-id="${s.id}">Elimina</button></div>
+    <ul>${(s.blocchi||[]).map(b=>`<li>${esc(b.nome)} · ${mins(b.min)}'${b.esNome?` · ${esc(b.esNome)}`:""}${b.bpm?` · <b>${b.bpm} BPM</b>`:""}${b.focus?` · ${FOCUS[b.focus].toLowerCase()}`:""}${b.distr?` · altrove ×${b.distr}`:""}${b.nota?`<div class="nota">${esc(b.nota)}</div>`:""}</li>`).join("")}</ul></div>`;
+}
+
+/* ===== schermata COSTANZA ===== */
+function vCostanza(){
+  const p=P(),t=ymd(),[y,m]=ui.month.split("-").map(Number);
+  const first=new Date(y,m-1,1),off=(first.getDay()+6)%7,n=new Date(y,m,0).getDate();
+  let cells=["lun","mar","mer","gio","ven","sab","dom"].map(x=>`<span class="h">${x}</span>`).join("")+"<span></span>".repeat(off);
+  let okN=0,past=0,slotN=0;
+  for(let d=1;d<=n;d++){
+    const ds=ymd(new Date(y,m-1,d)),i=dayInfo(ds),fut=ds>t;
+    if(!fut&&ds>=p.inizio){past++;if(i.ok)okN++;if(i.slot)slotN++;}
+    const cls=[i.ok?"ok":i.tot>0?"part":i.rest?"rest":"",fut?"fut":"",ds===t?"today":"",ds===ui.sel?"sel":""].join(" ");
+    cells+=`<button class="d ${cls}" data-act="selday" data-d="${ds}">${i.slot?'<i class="dot"></i>':""}${d}<small>${i.tot?mins(i.tot)+"'":i.rest?"R":""}</small></button>`;
+  }
+  const c=chain(),best=bestChain(),sel=parseD(ui.sel),si=dayInfo(ui.sel);
+  return `<section><h1>Costanza</h1></section>
+  <section><div class="row" style="align-items:flex-end;gap:14px"><span class="num" style="font-size:110px">${c}</span><div style="padding-bottom:12px"><b style="text-transform:uppercase;font-weight:850">${c===1?"giorno":"giorni"} di fila</b><div class="mute">col minimo di ${p.minimo}' · record ${best}</div></div></div>
+    <p class="mute">${p.riposi?`${p.riposi} riposo programmato a settimana non spezza la catena.`:""}</p></section>
+  <section><div class="row sp" style="margin-bottom:12px"><button class="step" data-act="month" data-v="-1">‹</button><h2 style="margin:0">${MESI[m-1]} ${y}</h2><button class="step" data-act="month" data-v="1">›</button></div>
+    <div class="cal">${cells}</div>
+    <div class="legend"><span><i class="ok"></i>minimo fatto</span><span><i class="part"></i>meno del minimo</span><span><i class="dot"></i>prima delle ${p.slot}</span><span>R riposo</span></div>
+    ${past?`<p style="margin-top:12px"><b>${okN}/${past}</b> giorni col minimo · <b>${slotN}/${past}</b> nello slot</p>`:""}</section>
+  <section><h2>${GG[sel.getDay()]} ${sel.getDate()} ${MESI[sel.getMonth()]}</h2>
+    ${si.ss.length?si.work.map(sessHtml).join("")+(si.rest?`<p>Riposo ${si.restOk?"programmato":"(oltre il limite della settimana)"} · <button class="link" data-act="unrest" data-d="${ui.sel}">annulla</button></p>`:""):`<p class="mute">${ui.sel>t?"Ancora da vivere.":"Nessuna seduta."}</p>`}
+    ${ui.sel<=t?`<div class="row" style="margin-top:8px"><button class="btn" data-act="manual" data-d="${ui.sel}">+ Segna una seduta</button>${!si.rest&&p.riposi-restsUpTo(ui.sel)>0?`<button class="btn" data-act="rest" data-d="${ui.sel}">Riposo</button>`:""}</div>`:""}
+  </section>`;
+}
+
+/* ===== schermata METRO ===== */
+function lastDays(n){const t=ymd();return [...Array(n)].map((_,i)=>addDays(t,i-n+1));}
+function weekStats(){
+  const days=lastDays(7),infos=days.map(dayInfo),ss=infos.flatMap(i=>i.work),bl=ss.flatMap(s=>s.blocchi||[]);
+  const foc=bl.filter(b=>b.focus).map(b=>b.focus);
+  const perBlock={};bl.forEach(b=>{perBlock[b.nome]=(perBlock[b.nome]||0)+(b.min||0);});
+  return {days,infos,ss,bl,tot:infos.reduce((a,i)=>a+i.tot,0),ok:infos.filter(i=>i.ok).length,slot:infos.filter(i=>i.slot).length,
+    worked:infos.filter(i=>i.tot>0).length,focus:foc.length?foc.reduce((a,b)=>a+b,0)/foc.length:null,
+    distr:ss.length?bl.reduce((a,b)=>a+(b.distr||0),0)/ss.length:null,perBlock};
+}
+function vMetro(){
+  const w=weekStats(),p=P();
+  const kpi=(v,u,l)=>`<div class="kpi"><div class="v num">${v}${u?`<small>${u}</small>`:""}</div><div class="l">${l}</div></div>`;
+  const fl=w.focus==null?"–":w.focus<1.67?"dispersa":w.focus<2.34?"a tratti":"dentro";
+  let h=`<section><h1>Metro</h1><p class="mute" style="margin-top:8px">Ultimi 7 giorni. Il metro lo tiene l'app: niente "bravissima", solo numeri.</p></section>
+  <section><div class="kpis">${kpi(w.ok,"/7","giorni col minimo")+kpi(mins(w.tot),"'","minuti suonati")+kpi(w.slot,"/7",`giorni prima delle ${p.slot}`)+kpi(w.distr==null?"–":w.distr.toFixed(1),"","volte \"altrove\" per seduta")}</div>
+    <p style="margin-top:12px">Concentrazione media: <b>${fl}</b>${w.focus!=null?` <span class="mute">(${w.focus.toFixed(1)} su 3)</span>`:""}</p></section>
+  <section><h2>Minuti al giorno</h2>${dayChart(lastDays(14))}</section>`;
+  const pb=Object.entries(w.perBlock).sort((a,b)=>b[1]-a[1]),mx=Math.max(1,...pb.map(x=>x[1]));
+  if(pb.length)h+=`<section><h2>Dove va il tempo</h2><div class="bars">${pb.map(([k,v])=>`<div class="bar"><span>${esc(k)}</span><span class="t"><i style="width:${v/mx*100}%"></i></span><span class="n">${mins(v)}'</span></div>`).join("")}</div></section>`;
+  const exs=exList().filter(e=>e.bpm);
+  h+=`<section><h2>BPM puliti</h2>${exs.map(e=>{const hh=exHist(e.id),lb=lastBpm(e.id);
+    return `<div class="ex"><div class="row sp"><b>${esc(e.nome)}</b><span class="num" style="font-size:30px">${lb||"–"}</span></div>
+      <div class="mute" style="font-size:12px">${hh.base?`partenza ${hh.base.bpm}`:"nessun dato di partenza"}${e.obiettivo?` · obiettivo ${e.obiettivo}`:""}${hh.pts.length?` · ${hh.pts.length} ${hh.pts.length===1?"misura":"misure"} in PRACTICE`:""}</div>
+      ${hh.pts.length?bpmChart(hh,e.obiettivo):""}</div>`;}).join("")}</section>
+  <section><button class="btn full wide" data-act="coach">Copia il resoconto per il Coach</button>
+    <p class="mute" style="font-size:12px;margin-top:8px">Incollalo in chat con Claude: è la base del bilancio della settimana.</p></section>`;
+  return h;
+}
+function dayChart(days){
+  const W=340,H=130,pb=18,mx=Math.max(P().minimo*2,...days.map(d=>dayInfo(d).tot)),bw=W/days.length,y=v=>H-pb-(v/mx)*(H-pb-8);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Minuti suonati al giorno, ultimi 14 giorni">`;
+  days.forEach((d,i)=>{const inf=dayInfo(d),x=i*bw+3,hgt=H-pb-y(inf.tot);
+    if(inf.tot)s+=`<rect x="${x}" y="${y(inf.tot)}" width="${bw-6}" height="${hgt}" rx="4" fill="${inf.ok?"var(--ink)":"none"}" stroke="var(--ink)" stroke-width="1.5"><title>${d}: ${mins(inf.tot)}'</title></rect>`;
+    else s+=`<rect x="${x}" y="${H-pb-2}" width="${bw-6}" height="2" rx="1" fill="currentColor" fill-opacity=".2"/>`;
+    if(i%2===days.length%2||i===days.length-1)s+=`<text x="${x+(bw-6)/2}" y="${H-4}" text-anchor="middle" font-size="9" fill="currentColor" fill-opacity=".6">${parseD(d).getDate()}</text>`;});
+  /* la linea del minimo sopra le barre, così si legge sempre */
+  const ym=y(P().minimo);
+  s+=`<line x1="0" x2="${W}" y1="${ym}" y2="${ym}" stroke="var(--acc)" stroke-width="1.5" stroke-dasharray="4 4"/><text x="0" y="${ym-5}" font-size="10" font-weight="700" fill="var(--acc)">minimo ${P().minimo}'</text>`;
+  return s+"</svg>";
+}
+function bpmChart(hh,target){
+  const pts=hh.pts,W=340,H=110,l=26,r=10,t=10,b=18;
+  const vals=pts.map(p=>p.bpm).concat(hh.base?[hh.base.bpm]:[]).concat(target?[target]:[]);
+  const lo=Math.min(...vals)-5,hi=Math.max(...vals)+5;
+  const d0=pts[0].data,span=Math.max(1,diffDays(d0,pts[pts.length-1].data));
+  const X=d=>l+(pts.length===1?(W-l-r)/2:diffDays(d0,d)/span*(W-l-r)),Y=v=>t+(1-(v-lo)/(hi-lo))*(H-t-b);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="BPM puliti nel tempo">`;
+  const ref=(v,lab,dash)=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" stroke-opacity=".35" ${dash?'stroke-dasharray="3 4"':""}/><text x="${l-4}" y="${Y(v)+3}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity=".6">${v}</text><text x="${W-r}" y="${Y(v)-4}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity=".6">${lab}</text>`;
+  if(target)s+=ref(target,"obiettivo",true);
+  if(hh.base)s+=ref(hh.base.bpm,"partenza",false);
+  s+=`<polyline fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round" points="${pts.map(p=>X(p.data)+","+Y(p.bpm)).join(" ")}"/>`;
+  pts.forEach(p=>{s+=`<circle cx="${X(p.data)}" cy="${Y(p.bpm)}" r="3.5" fill="var(--acc)"><title>${p.data}: ${p.bpm} BPM</title></circle>`;});
+  s+=`<text x="${l}" y="${H-4}" font-size="9" fill="currentColor" fill-opacity=".6">${parseD(d0).getDate()}/${parseD(d0).getMonth()+1}</text>`;
+  return s+"</svg>";
+}
+function coachText(){
+  const w=weekStats(),p=P(),wk=weekOf(ymd());
+  const L=[`PRACTICE · resoconto ${w.days[0]} → ${w.days[6]}`,wk?`${p.nome} · settimana ${wk.n}: ${wk.titolo}`:"",
+    `Giorni col minimo (${p.minimo}'): ${w.ok}/7 · prima delle ${p.slot}: ${w.slot}/7 · catena: ${chain()} (record ${bestChain()})`,
+    `Minuti totali: ${mins(w.tot)}' · sedute: ${w.ss.length}`,
+    `Concentrazione media: ${w.focus==null?"–":w.focus.toFixed(1)+"/3"} · "ero altrove" per seduta: ${w.distr==null?"–":w.distr.toFixed(1)}`,
+    "Per blocco: "+(Object.entries(w.perBlock).map(([k,v])=>`${k} ${mins(v)}'`).join(" · ")||"–"),"","Giorno per giorno:"];
+  w.days.forEach((d,i)=>{const inf=w.infos[i];L.push(`- ${d}: ${inf.rest&&!inf.tot?"riposo":mins(inf.tot)+"'"}${inf.ok?" ✓":""}${inf.slot?" (slot)":""}`);});
+  L.push("","Esercizi:");
+  exList().filter(e=>e.bpm).forEach(e=>{const hh=exHist(e.id);const wk7=hh.pts.filter(x=>x.data>=w.days[0]);if(wk7.length)L.push(`- ${e.nome}: ${wk7.map(x=>x.bpm).join(" → ")} BPM${hh.base?` (partenza ${hh.base.bpm})`:""}${e.obiettivo?` · obiettivo ${e.obiettivo}`:""}`);});
+  const notes=w.ss.flatMap(s=>(s.blocchi||[]).filter(b=>b.nota).map(b=>`- ${s.data} · ${b.nome}: ${b.nota}`));
+  if(notes.length)L.push("","Note:",...notes);
+  return L.filter(x=>x!==null).join("\n");
+}
+
+/* ===== schermata PIANO ===== */
+function vPiano(){
+  const p=P(),wk=weekOf(ymd());
+  return `<section><h1>Piano</h1><p class="mute" style="margin-top:8px">${esc(p.nome)}. Si affina strada facendo: tocca una voce per cambiarla.</p>
+    ${p.coach?`<div class="nota">${esc(p.coach)}</div>`:""}</section>
+  <section><h2>Le settimane</h2>${p.calendario.map((w,i)=>`<button class="edit card ${wk&&wk.n===w.n?"hi":""}" data-act="editweek" data-i="${i}">
+      <div class="cap">Settimana ${w.n} · dal ${parseD(addDays(p.inizio,i*7)).getDate()} ${MESI[parseD(addDays(p.inizio,i*7)).getMonth()]}</div>
+      <h3 style="margin:4px 0 6px">${esc(w.titolo)}</h3><div style="font-size:13px">${esc(w.obiettivo)}</div>
+      <div class="mute" style="font-size:12px;margin-top:6px">Giornate: ${w.giornate.map(g=>GIORNATE[g]).join(" · ")}</div></button>`).join("")}</section>
+  <section><h2>Le giornate</h2>${Object.keys(GIORNATE).map(g=>`<button class="edit" data-act="editday" data-g="${g}" style="border-top:1px solid var(--line);padding:10px 0">
+      <div class="row sp"><b style="text-transform:uppercase">${GIORNATE[g]}</b><span class="num" style="font-size:26px">${dayMin(g)}'</span></div>
+      <div class="mute" style="font-size:13px">${dayBlocks(g).map(b=>esc(b.nome)).join(" → ")}</div></button>`).join("")}</section>
+  <section><h2>I blocchi</h2><ul class="blist">${p.blocchi.map((b,i)=>`<li><span class="m">${b.min}<small>'</small></span><button class="edit" data-act="editblock" data-i="${i}" style="padding:0"><b>${esc(b.nome)}</b>
+      <div style="font-size:13px">${esc(b.obiettivo)}</div><div class="f">${esc(b.fonte)}</div></button></li>`).join("")}</ul>
+    <button class="btn" data-act="newblock" style="margin-top:8px">+ Nuovo blocco</button></section>
+  <section><h2>Gli esercizi</h2>${p.blocchi.filter(b=>b.esercizi).map(b=>`<div class="cap" style="margin:12px 0 4px">${esc(b.nome)}</div>
+      ${exList(b.k).map(e=>`<button class="edit" data-act="editex" data-id="${e.id}" style="border-top:1px solid var(--line);padding:9px 0"><div class="row sp"><span>${e.focus?"● ":""}${esc(e.nome)}</span><span class="mute">${e.bpm?(lastBpm(e.id)||"–")+(e.obiettivo?" → "+e.obiettivo:""):""}</span></div></button>`).join("")||'<p class="mute">Nessuno.</p>'}`).join("")}
+    <p class="mute" style="font-size:12px;margin-top:8px">● = l'esercizio proposto per primo nel blocco.</p>
+    <button class="btn" data-act="newex" style="margin-top:4px">+ Nuovo esercizio</button></section>
+  <section><h2>Le regole</h2><button class="edit" data-act="editrules"><p>Minimo garantito: <b>${p.minimo} minuti</b><br>Slot: <b>prima delle ${p.slot}</b><br>Riposi che non spezzano la catena: <b>${p.riposi} a settimana</b></p></button></section>
+  <section class="row sp"><span class="mute" style="font-size:12px">${Store.DEMO?"Modalità prova: dati solo in questo browser.":"Dati su Supabase, gli stessi su Mac e iPhone."}</span>
+    ${Store.DEMO?`<button class="link" data-act="demoreset">Ricomincia la prova</button>`:`<button class="link" data-act="signout">Esci</button>`}</section>`;
+}
+
+/* ===== moduli (finestra di modifica) ===== */
+function form(title,fields,vals,onSave,opts={}){
+  const d=$("#dlg");
+  const f=x=>{const v=vals[x.k]??"";
+    if(x.t==="textarea")return `<label>${x.l}<textarea name="${x.k}">${esc(v)}</textarea></label>`;
+    if(x.t==="select")return `<label>${x.l}<select name="${x.k}">${x.o.map(([ov,ol])=>`<option value="${esc(ov)}" ${String(ov)===String(v)?"selected":""}>${esc(ol)}</option>`).join("")}</select></label>`;
+    if(x.t==="check")return `<label class="inline"><input type="checkbox" name="${x.k}" ${v?"checked":""}>${x.l}</label>`;
+    return `<label>${x.l}<input type="${x.t||"text"}" name="${x.k}" value="${esc(v)}" ${x.t==="number"?'inputmode="decimal" step="any"':""}></label>`;};
+  d.innerHTML=`<form class="frm" method="dialog"><h2>${esc(title)}</h2>${opts.intro?`<p class="mute">${opts.intro}</p>`:""}
+    ${fields.map(x=>Array.isArray(x)?`<div class="two">${x.map(f).join("")}</div>`:f(x)).join("")}
+    <div class="btns">${opts.del?'<button type="button" class="btn danger" data-fx="del">Elimina</button>':""}<span style="flex:1"></span>
+    <button type="button" class="btn" data-fx="close">Annulla</button><button class="btn full" value="ok">Salva</button></div></form>`;
+  const fm=d.querySelector("form");
+  fm.onsubmit=e=>{e.preventDefault();const out={};fields.flat().forEach(x=>{const el=fm.elements[x.k];out[x.k]=x.t==="check"?el.checked:x.t==="number"?(el.value===""?null:+el.value):el.value.trim();});d.close();onSave(out);};
+  fm.querySelector('[data-fx="close"]').onclick=()=>d.close();
+  if(opts.del)fm.querySelector('[data-fx="del"]').onclick=()=>{if(confirm(opts.delAsk||"Eliminare?")){d.close();opts.del();}};
+  d.showModal();
+}
+const savePiano=patch=>Store.doc("pratica_piano/ciclo").update(patch);
+function manualForm(date){
+  const p=P(),exs=exList().filter(e=>e.bpm);
+  const fields=[{k:"ora",l:"Ora d'inizio",t:"time"},...p.blocchi.map(b=>({k:"b_"+b.k,l:b.nome+" (minuti)",t:"number"})),
+    {k:"es",l:"Esercizio con BPM",t:"select",o:[["","—"],...exs.map(e=>[e.id,e.nome])]},{k:"bpm",l:"BPM più alto pulito",t:"number"},
+    {k:"focus",l:"Concentrazione",t:"select",o:[["",""],["1","Dispersa"],["2","A tratti"],["3","Dentro"]]},{k:"nota",l:"Nota",t:"textarea"}];
+  form("Seduta del "+parseD(date).getDate()+" "+MESI[parseD(date).getMonth()],fields,{ora:"09:00"},v=>{
+    const blocchi=p.blocchi.filter(b=>v["b_"+b.k]>0).map(b=>({k:b.k,nome:b.nome,prev:b.min,min:v["b_"+b.k],es:null,esNome:null,bpm:null,focus:v.focus?+v.focus:null,distr:0,nota:""}));
+    if(!blocchi.length){toast("Nessun minuto inserito");return;}
+    if(v.es&&v.bpm){const e=S.esercizi[v.es];const tb=blocchi.find(b=>b.k===e.blocco)||blocchi[0];Object.assign(tb,{es:v.es,esNome:e.nome,bpm:v.bpm});}
+    if(v.nota)blocchi[blocchi.length-1].nota=v.nota;
+    const [hh,mm]=(v.ora||"09:00").split(":").map(Number),st=parseD(date);st.setHours(hh,mm);
+    Store.collection("pratica_sedute").add({data:date,giornata:"manuale",settimana:(weekOf(date)||{}).n||null,manuale:true,inizio:st.toISOString(),blocchi,totale:blocchi.reduce((a,b)=>a+b.min,0)});
+    toast("Seduta segnata");
+  },{intro:"Per quando hai studiato senza aprire l'app. Metti solo i blocchi che hai fatto."});
+}
+
+/* ===== azioni ===== */
+const ACT={
+  tab:el=>{ui.tab=el.dataset.t;saveLS("tab",ui.tab);ui.again=false;render();scrollTo(0,0);},
+  giornata:el=>{ui.giornata=el.dataset.g;render();},
+  rit:el=>{ui.rit[el.dataset.k]=!ui.rit[el.dataset.k];render();},
+  start:()=>{Audio_.get();startLive(ui.giornata);},
+  toggle:()=>{const b=cur();if(b.run){b.ms+=Date.now()-b.run;b.run=null;}else b.run=Date.now();saveLive();render();},
+  distr:()=>{cur().distr++;saveLive();render();if(navigator.vibrate)navigator.vibrate(30);},
+  pickex:el=>{const b=cur();b.es=el.dataset.id;const e=S.esercizi[b.es];b.bpm=e&&e.bpm?(lastBpm(b.es)||80):null;if(Metro.on&&b.bpm)Metro.set(b.bpm);saveLive();render();},
+  bpm:el=>{const b=cur();b.bpm=Math.max(30,Math.min(300,(b.bpm||80)+ +el.dataset.v));if(Metro.on)Metro.set(b.bpm);saveLive();render();},
+  metro:()=>{const b=cur();if(Metro.on)Metro.stop();else Metro.start(b.bpm||80);render();},
+  endblock:()=>{pauseCur();Metro.stop();LIVE.ending=true;saveLive();render();},
+  back:()=>{const b=cur();b.nota=($("#bnota")||{}).value||b.nota;LIVE.ending=false;b.run=Date.now();saveLive();render();},
+  focus:el=>{const b=cur();b.nota=($("#bnota")||{}).value||b.nota;b.focus=+el.dataset.v;saveLive();render();},
+  next:()=>{const b=cur();b.nota=($("#bnota")||{}).value||"";b.done=true;LIVE.ending=false;
+    if(LIVE.i<LIVE.blocchi.length-1){LIVE.i++;const nb=cur();nb.run=Date.now();saveLive();beep();render();scrollTo(0,0);}else finishLive();},
+  closehere:()=>{if(confirm("Chiudere qui la seduta? Si salvano i minuti fatti finora."))finishLive();},
+  abort:()=>{if(confirm("Annullare la seduta? Niente verrà salvato.")){Metro.stop();LIVE=null;saveLive();unwake();render();}},
+  "stale-save":()=>finishLive(),
+  "stale-drop":()=>{if(confirm("Scartare la seduta rimasta aperta?")){LIVE=null;saveLive();render();}},
+  again:()=>{ui.again=true;render();},
+  manual:el=>manualForm(el.dataset.d),
+  rest:el=>{Store.collection("pratica_sedute").add({data:el.dataset.d,giornata:"riposo",blocchi:[],totale:0});toast("Riposo segnato");},
+  unrest:el=>{sessOn(el.dataset.d).filter(s=>s.giornata==="riposo").forEach(s=>Store.doc("pratica_sedute/"+s.id).delete());},
+  delsess:el=>{if(confirm("Eliminare questa seduta? Non si può annullare."))Store.doc("pratica_sedute/"+el.dataset.id).delete();},
+  selday:el=>{ui.sel=el.dataset.d;render();},
+  month:el=>{const [y,m]=ui.month.split("-").map(Number),d=new Date(y,m-1+ +el.dataset.v,1);ui.month=ymd(d).slice(0,7);render();},
+  coach:async()=>{const t=coachText();try{await navigator.clipboard.writeText(t);toast("Copiato: incollalo in chat");}catch(e){form("Resoconto",[{k:"t",l:"Seleziona e copia",t:"textarea"}],{t},()=>{});}},
+  editweek:el=>{const p=P(),i=+el.dataset.i,w=p.calendario[i];
+    form("Settimana "+w.n,[{k:"titolo",l:"Titolo"},{k:"obiettivo",l:"Obiettivo",t:"textarea"},...Object.keys(GIORNATE).map(g=>({k:"g_"+g,l:"Giornata "+GIORNATE[g].toLowerCase()+" disponibile",t:"check"}))],
+      {...w,...Object.fromEntries(Object.keys(GIORNATE).map(g=>["g_"+g,w.giornate.includes(g)]))},
+      v=>{const g=Object.keys(GIORNATE).filter(k=>v["g_"+k]);if(!g.length)g.push("minimo");const cal=p.calendario.map((x,j)=>j===i?{...x,titolo:v.titolo,obiettivo:v.obiettivo,giornate:g}:x);savePiano({calendario:cal});});},
+  editday:el=>{const p=P(),g=el.dataset.g;
+    form("Giornata "+GIORNATE[g].toLowerCase(),p.blocchi.map(b=>({k:b.k,l:`${b.nome} (${b.min}')`,t:"check"})),Object.fromEntries(p.blocchi.map(b=>[b.k,p.giornate[g].includes(b.k)])),
+      v=>{const list=p.blocchi.filter(b=>v[b.k]).map(b=>b.k);savePiano({giornate:{...p.giornate,[g]:list}});},{intro:"I blocchi si fanno nell'ordine della lista dei blocchi."});},
+  editblock:el=>{const p=P(),i=+el.dataset.i,b=p.blocchi[i];
+    form(b.nome,[[{k:"nome",l:"Nome"},{k:"min",l:"Minuti",t:"number"}],{k:"obiettivo",l:"Obiettivo",t:"textarea"},{k:"fonte",l:"Fonte attiva"},{k:"come",l:"Come si fa",t:"textarea"},{k:"esercizi",l:"Ha esercizi (con BPM e metronomo)",t:"check"},{k:"pos",l:"Posizione (1 = primo)",t:"number"}],
+      {...b,pos:i+1},v=>{const nb={...b,nome:v.nome||b.nome,min:v.min||b.min,obiettivo:v.obiettivo,fonte:v.fonte,come:v.come,esercizi:v.esercizi};
+        const arr=p.blocchi.filter((_,j)=>j!==i);arr.splice(Math.max(0,Math.min(arr.length,(v.pos||i+1)-1)),0,nb);
+        const order=arr.map(x=>x.k),gio=Object.fromEntries(Object.entries(p.giornate).map(([g,l])=>[g,order.filter(k=>l.includes(k))]));
+        savePiano({blocchi:arr,giornate:gio});},
+      {del:()=>{const gio=Object.fromEntries(Object.entries(p.giornate).map(([g,l])=>[g,l.filter(k=>k!==b.k)]));savePiano({blocchi:p.blocchi.filter((_,j)=>j!==i),giornate:gio});},delAsk:"Eliminare il blocco? Le sedute passate restano."});},
+  newblock:()=>{const p=P();form("Nuovo blocco",[[{k:"nome",l:"Nome"},{k:"min",l:"Minuti",t:"number"}],{k:"obiettivo",l:"Obiettivo",t:"textarea"},{k:"fonte",l:"Fonte attiva"},{k:"come",l:"Come si fa",t:"textarea"},{k:"esercizi",l:"Ha esercizi (con BPM e metronomo)",t:"check"}],{min:10},
+    v=>{if(!v.nome)return;const k=v.nome.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-")+"-"+Date.now().toString(36);savePiano({blocchi:[...p.blocchi,{k,...v,min:v.min||10}]});toast("Aggiunto: ora mettilo in una giornata");});},
+  editex:el=>exForm(el.dataset.id),
+  newex:()=>exForm(null),
+  editrules:()=>{const p=P();form("Le regole",[{k:"minimo",l:"Minimo garantito (minuti)",t:"number"},{k:"slot",l:"Slot: prima delle",t:"time"},{k:"riposi",l:"Riposi a settimana che non spezzano la catena",t:"number"},{k:"nome",l:"Nome del ciclo"},{k:"coach",l:"Nota del coach",t:"textarea"}],p,
+    v=>savePiano({minimo:v.minimo||p.minimo,slot:v.slot||p.slot,riposi:v.riposi??p.riposi,nome:v.nome||p.nome,coach:v.coach}));},
+  signout:async()=>{if(confirm("Uscire da PRACTICE su questo dispositivo?")){await Store.signOut();location.reload();}},
+  demoreset:()=>{if(confirm("Ricominciare la prova da capo?")){Object.keys(localStorage).filter(k=>k.startsWith("practice-demo-")).forEach(k=>localStorage.removeItem(k));location.reload();}}
+};
+function exForm(id){
+  const p=P(),e=id?S.esercizi[id]:{blocco:(p.blocchi.find(b=>b.esercizi)||{}).k,bpm:true};
+  form(id?e.nome:"Nuovo esercizio",[{k:"nome",l:"Nome"},{k:"blocco",l:"Blocco",t:"select",o:p.blocchi.filter(b=>b.esercizi).map(b=>[b.k,b.nome])},
+    {k:"bpm",l:"Si misura in BPM",t:"check"},[{k:"base",l:"BPM di partenza",t:"number"},{k:"obiettivo",l:"BPM obiettivo",t:"number"}],
+    {k:"focus",l:"Proponilo per primo nel suo blocco",t:"check"},{k:"nota",l:"Nota",t:"textarea"}],
+    {...e,base:e.base?e.base.bpm:null},
+    v=>{const data={...e,nome:v.nome||e.nome||"Esercizio",blocco:v.blocco,bpm:v.bpm,obiettivo:v.obiettivo,focus:v.focus,nota:v.nota,base:v.base?{...(e.base||{}),bpm:v.base}:null};
+      if(v.focus)exList(v.blocco).filter(x=>x.id!==id&&x.focus).forEach(x=>Store.doc("pratica_esercizi/"+x.id).update({focus:false}));
+      if(id)Store.doc("pratica_esercizi/"+id).set(data);else Store.collection("pratica_esercizi").add({...data,ordine:99});},
+    id?{del:()=>Store.doc("pratica_esercizi/"+id).update({archiviato:true}),delAsk:"Togliere l'esercizio? I BPM delle sedute passate restano."}:{});
+}
+document.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el||el.disabled)return;const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el);}});
+document.addEventListener("input",e=>{if(e.target.id==="bnota"&&LIVE){cur().nota=e.target.value;saveLive();}});
+
+/* ===== disegno ===== */
+function render(){
+  if(!booted)return;
+  const tabs=[["oggi","Oggi"],["costanza","Costanza"],["metro","Metro"],["piano","Piano"]];
+  $("#tabs").hidden=false;
+  $("#tabs").innerHTML=tabs.map(([k,l])=>`<button class="${ui.tab===k?"on":""}" data-act="tab" data-t="${k}">${l}${k==="oggi"&&LIVE&&ui.tab!=="oggi"?'<span class="liv"></span>':""}</button>`).join("");
+  $("#main").innerHTML=ui.tab==="costanza"?vCostanza():ui.tab==="metro"?vMetro():ui.tab==="piano"?vPiano():vOggi();
+}
+/* il timer si aggiorna da solo senza ridisegnare la pagina; il tempo si calcola dagli orari, quindi regge anche a schermo spento */
+setInterval(()=>{
+  if(!LIVE||LIVE.ending||ui.tab!=="oggi")return;
+  const el=$("#timer");if(!el)return;
+  const b=cur(),rem=b.prev*60000-elapsed(b);
+  el.textContent=rem>=0?fmt(rem):"+"+fmt(-rem);el.classList.toggle("over",rem<0);
+  if(rem<0&&b.run&&!b.beeped){b.beeped=true;saveLive();beep();render();}
+},250);
+
+/* ===== avvio ===== */
+let booted=false;
+Store.onStatus(st=>{const el=$("#sync");el.className=st.error||!st.online?"warn":"";
+  el.lastChild.textContent=st.demo?"prova":!st.online?"offline":st.error?"non sincronizzato":st.pending?st.pending+" da inviare":"sincronizzato";
+  if(st.error&&/relation|does not exist|schema cache/i.test(st.error))$("#main").innerHTML=`<section class="login"><h1>Manca il database</h1><p>Le tabelle di PRACTICE non ci sono ancora su Supabase. Esegui lo script <b>supabase/01-tabelle.sql</b> nell'SQL Editor, poi ricarica.</p></section>`;});
+function subscribe(){
+  Store.collection("pratica_sedute").onSnapshot(s=>{S.sedute=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]));render();});
+  Store.collection("pratica_esercizi").onSnapshot(s=>{S.esercizi=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]));render();});
+  Store.collection("pratica_piano").onSnapshot(s=>{const d=s.docs.find(x=>x.id==="ciclo");S.piano=d?d.data():null;render();});
+}
+/* primo accesso: se il piano non c'è ancora, lo scrive dal punto di partenza (una volta sola, mai sopra dati esistenti) */
+Store.onPulled(async()=>{
+  booted=true;
+  if(!S.piano){
+    await Store.doc("pratica_piano/ciclo").create(SEED.piano);
+    for(const [id,e] of Object.entries(SEED.esercizi))await Store.doc("pratica_esercizi/"+id).create(e);
+  }
+  render();
+});
+function loginView(){
+  $("#tabs").hidden=true;
+  $("#main").innerHTML=`<section class="login"><h1>Entra in<br>Practice</h1><p class="mute" style="margin-top:10px">Stessa email e password di ENLIST e TRAIN. Lo fai una volta sola su ogni dispositivo.</p>
+    <form id="lf"><input type="email" name="email" autocomplete="username" placeholder="Email" required><input type="password" name="pass" autocomplete="current-password" placeholder="Password" required>
+    <button class="btn full" style="min-height:52px">Entra</button><p id="lerr" class="mute"></p></form></section>`;
+  $("#lf").onsubmit=async e=>{e.preventDefault();const f=e.target;$("#lerr").textContent="Accesso…";
+    try{await Store.signIn(f.email.value.trim(),f.pass.value);go();}catch(err){$("#lerr").textContent="Non entra: "+(err.message||err);}};
+}
+function go(){
+  $("#main").innerHTML=`<section><p class="mute">Carico…</p></section>`;
+  subscribe();Store.start();if(LIVE)wake();
+}
+if(Store.DEMO)window.DEMO_SEED=demoSeed();
+function demoSeed(){
+  /* modalità prova: il piano vero più dieci giorni inventati, per vedere calendario e grafici pieni */
+  const sed={},t=ymd();
+  for(let i=10;i>=1;i--){const d=addDays(t,-i);if(i===4)continue;
+    const st=parseD(d);st.setHours(i%3?8:10,i%3?40:20);const tot=i===7?18:30+(i%4)*8;
+    sed["demo-"+i]={data:d,giornata:"minimo",inizio:st.toISOString(),totale:tot,blocchi:[
+      {k:"riscaldamento",nome:"Riscaldamento",prev:5,min:5,es:"legato-134",esNome:"Legato 1-3-4 / 1-2-4",bpm:70+(10-i)*2,focus:2,distr:1,nota:""},
+      {k:"tecnica",nome:"Tecnica",prev:15,min:tot-15,es:"gambale-r2",esNome:"Chop Builder · Round 2",bpm:84+(10-i)*2,focus:i%2?3:2,distr:i%3,nota:i===2?"Chop pentatonici più sciolti sopra i 95":""},
+      {k:"suonare",nome:"Suonare",prev:10,min:10,es:null,esNome:null,bpm:null,focus:3,distr:0,nota:""}]};}
+  sed["demo-r"]={data:addDays(t,-4),giornata:"riposo",blocchi:[],totale:0};
+  return {pratica_piano:{ciclo:SEED.piano},pratica_esercizi:SEED.esercizi,pratica_sedute:sed};
+}
+(async()=>{if(await Store.session())go();else loginView();})();
+if("serviceWorker" in navigator&&!Store.DEMO&&location.protocol==="https:")navigator.serviceWorker.register("sw.js");
+</script>
+</body></html>
