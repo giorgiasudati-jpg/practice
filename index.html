@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PRACTICE">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#E4EEDC">
+<meta name="theme-color" content="#EFECE6">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
@@ -16,17 +16,18 @@
 <script src="iniziale.js"></script>
 <script src="store.js"></script>
 <style>
-/* Layout: "cronometro su campo". Terza gemella della famiglia: ENLIST è carta e inchiostro del mese con Archivo larga,
-   TRAIN è fondo nero e blocchi di colore con Archivo stretta; PRACTICE è verde campo su carta chiara con Archivo a larghezza
-   normale, numeri enormi e sottili da cronometro, un solo colore di segnale (lime) per la catena dei giorni. */
+/* Layout: "svizzero, less but better" (references di Giorgia, 2026-11-01: poster delle linee e della palla rossa, calendario a cerchi,
+   menu numerato Industrial, arco WOVE, giorni impilati, percorso di cerchi rossi). Carta calda, inchiostro nero, UN solo rosso di segnale
+   usato con parsimonia (oggi, il blocco attivo, le spunte). Archivo come le gemelle: numeri enormi e pesanti, testo normale,
+   maiuscolo solo per i titoli brevi. Righe sottili al posto dei riquadri, cerchi al posto delle caselle. */
 :root{
-  --paper:#E4EEDC; --card:#F1F6EC; --ink:#14281C; --acc:#1D5A35; --hi:#CFEA5B; --hi-ink:#14281C;
-  --mute:rgba(20,40,28,.62); --line:rgba(20,40,28,.16); --soft:rgba(20,40,28,.06); --warn:#A3361B;
+  --paper:#EFECE6; --ink:#121212; --red:#E3321C; --on-red:#FFFFFF;
+  --mute:rgba(18,18,18,.55); --line:rgba(18,18,18,.16); --soft:rgba(18,18,18,.07); --faint:rgba(18,18,18,.24);
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
-  --paper:#0D1510; --card:#142019; --ink:#E3ECDD; --acc:#8BD9A6; --hi:#CFEA5B; --hi-ink:#14281C;
-  --mute:rgba(227,236,221,.62); --line:rgba(227,236,221,.16); --soft:rgba(227,236,221,.06); --warn:#FF8A6B;
+  --paper:#1E1E1E; --ink:#ECE9E3; --red:#F0462E; --on-red:#FFFFFF;
+  --mute:rgba(236,233,227,.58); --line:rgba(236,233,227,.16); --soft:rgba(236,233,227,.07); --faint:rgba(236,233,227,.26);
   color-scheme:dark;
 }}
 *{box-sizing:border-box}
@@ -36,149 +37,187 @@ body{padding:env(safe-area-inset-top,0) 0 calc(92px + env(safe-area-inset-bottom
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 main{max-width:560px;margin:0 auto;padding:4px 16px 24px}
-h1,h2,h3{font-weight:850;text-transform:uppercase;margin:0;letter-spacing:-.01em;line-height:.95}
-h1{font-size:34px}
-h2{font-size:19px;margin-bottom:10px}
-h3{font-size:14px}
+h1,h2,h3{font-weight:800;margin:0;letter-spacing:-.02em;line-height:1}
+h1{font-size:40px;text-transform:uppercase}
+h2{font-size:22px;text-transform:uppercase;margin-bottom:12px}
+h3{font-size:15px}
 p{margin:0 0 10px}
-.cap{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.cap{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--mute)}
 .mute{color:var(--mute)}
-.num{font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.04em;line-height:.9}
-.nota{border-left:2px solid var(--acc);padding:2px 0 2px 10px;margin:8px 0;color:var(--ink)}
-section{padding:18px 0;border-top:1px solid var(--line)}
-section:first-of-type{border-top:0}
+.heavy{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:.85}
+.nota{border-left:2px solid var(--ink);padding:2px 0 2px 12px;margin:10px 0}
+section{padding:20px 0;border-top:1px solid var(--line)}
+section:first-of-type,section.flush{border-top:0}
+sup{font-size:10px;font-weight:600;vertical-align:top;position:relative;top:4px;letter-spacing:.02em}
 
 /* testata */
-#top{max-width:560px;margin:0 auto;padding:12px 16px 0;display:flex;justify-content:space-between;align-items:center}
-#top .word{font-weight:900;text-transform:uppercase;letter-spacing:.02em;font-size:13px}
+#top{max-width:560px;margin:0 auto;padding:14px 16px 0;display:flex;justify-content:space-between;align-items:center}
+#top .word{font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:13px;display:flex;align-items:center;gap:7px}
+#top .word i{width:9px;height:9px;border-radius:50%;background:var(--red);display:inline-block}
 #sync{font-size:11px;color:var(--mute);display:flex;gap:6px;align-items:center}
-#sync i{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block}
-#sync.warn i{background:var(--warn)}
+#sync i{width:6px;height:6px;border-radius:50%;background:var(--ink);opacity:.5;display:inline-block}
+#sync.warn i{background:var(--red);opacity:1}
 
-.datehead{display:flex;align-items:flex-end;gap:14px;padding:14px 0 6px}
-.datehead .big{font-size:96px}
-.datehead .side{padding-bottom:8px}
-.datehead .side b{display:block;font-weight:850;text-transform:uppercase;font-size:19px;line-height:1}
-.chainbadge{display:inline-flex;align-items:center;gap:6px;background:var(--hi);color:var(--hi-ink);border-radius:99px;padding:3px 10px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
+/* data come nel calendario a cerchi */
+.dh{padding:22px 0 4px}
+.dh .n{font-size:132px}
+.dh .meta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px}
+.dh .m{font-size:24px;text-transform:uppercase;line-height:1.05;letter-spacing:.01em}
+.dh .y{font-size:24px;color:var(--mute);line-height:1.05}
+.dh .w{font-size:24px}
+.wk{margin-top:14px;font-size:13px}
+.wk b{color:var(--red);font-weight:700}
+.minihead{display:flex;justify-content:space-between;padding:12px 0 0;font-size:13px;color:var(--mute)}
 
-/* pulsanti e pillole */
-.btn{border:1.5px solid var(--ink);background:transparent;border-radius:99px;padding:10px 16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
+/* le linee della catena */
+.chainart{margin:6px 0 0}
+.chainart svg{display:block;width:100%;height:auto}
+.chainart .lab{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px}
+.chainart .lab b{font-size:15px}
+
+/* pulsanti */
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:8px;padding:10px 16px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px}
 .btn.full{background:var(--ink);color:var(--paper)}
+.btn.red{background:var(--red);border-color:var(--red);color:var(--on-red)}
 .btn.wide{width:100%}
-.btn.hi{background:var(--hi);color:var(--hi-ink);border-color:var(--hi)}
-.btn:disabled{opacity:.35;cursor:default}
-.btn.danger{border-color:var(--warn);color:var(--warn)}
+.btn:disabled{opacity:.3;cursor:default}
+.btn.danger{border-color:var(--red);color:var(--red)}
 .link{background:none;border:0;padding:8px 0;color:var(--mute);text-decoration:underline;text-underline-offset:3px;min-height:40px}
-.pills{display:flex;flex-wrap:wrap;gap:8px}
-.pill{border:1.5px solid var(--ink);border-radius:99px;padding:8px 14px;background:transparent;font-weight:650;min-height:40px}
-.pill.on{background:var(--ink);color:var(--paper)}
-.pill:disabled{opacity:.35;border-style:dashed}
-.pill small{font-weight:400;opacity:.75}
 .row{display:flex;gap:10px;align-items:center}
 .row.sp{justify-content:space-between}
-.stack{display:flex;flex-direction:column;gap:10px}
 
-/* righe dei blocchi */
-.blist{list-style:none;margin:8px 0 0;padding:0}
-.blist li{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
-.blist li:first-child{border-top:0}
-.blist .m{font-size:26px;font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
-.blist .m small{font-size:11px;font-weight:600}
-.blist b{text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.02em}
-.blist .f{color:var(--mute);font-size:13px}
-.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:var(--soft);margin-left:6px;vertical-align:2px}
+/* scelta della giornata: tre caselle affiancate */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-left:1.5px solid var(--ink);background:transparent;padding:10px 4px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:600}
+.seg button:first-child{border-left:0}
+.seg button small{font-weight:400;font-size:12px;opacity:.7}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.seg button:disabled{color:var(--faint)}
 
-.card{background:var(--card);border-radius:18px;padding:16px;margin:10px 0}
-.card.hi{background:var(--hi);color:var(--hi-ink)}
-.card.hi .mute,.card.hi .cap{color:rgba(20,40,28,.66)}
-.check{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;min-height:48px}
-.check:first-of-type{border-top:0}
-.check .box{width:24px;height:24px;border:1.5px solid var(--ink);border-radius:7px;flex:none;display:grid;place-items:center;font-weight:900}
-.check.on .box{background:var(--ink);color:var(--paper)}
+/* elenchi numerati come il menu Industrial */
+.nl{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--faint)}
+.nl li{display:grid;grid-template-columns:30px 1fr auto;gap:4px 8px;align-items:baseline;padding:11px 0 12px;border-top:1px solid var(--faint)}
+.nl li sup{grid-row:1}
+.nl .nm{font-size:27px;font-weight:420;letter-spacing:-.025em;line-height:1.05}
+.nl .mn{font-size:27px;font-weight:420;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.nl .f{grid-column:2/4;font-size:13px;color:var(--mute);line-height:1.35}
+.nl li.on .nm,.nl li.on sup{color:var(--red)}
+.nl button.nm{background:none;border:0;padding:0;text-align:left}
 
-/* seduta in corso */
-.segs{display:flex;gap:4px;margin:10px 0 14px}
-.segs span{flex:1;height:4px;border-radius:2px;background:var(--line)}
-.segs span.done{background:var(--acc)}
-.segs span.on{background:var(--ink)}
-.bname{font-size:44px;margin:4px 0 10px}
-.timer{font-size:clamp(84px,28vw,140px);text-align:center;margin:16px 0 2px}
-.timer.over{color:var(--acc)}
-.tsub{text-align:center;color:var(--mute);margin-bottom:16px}
-.ctrl{display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:16px}
-.round{width:84px;height:84px;border-radius:50%;border:0;background:var(--ink);color:var(--paper);font-weight:800;text-transform:uppercase;font-size:13px;letter-spacing:.04em}
-.round.paused{background:var(--hi);color:var(--hi-ink)}
-.distr{display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid var(--ink);border-radius:20px;background:transparent;padding:10px 14px;min-width:96px}
-.distr b{font-size:26px;font-weight:300;line-height:1}
-.distr span{font-size:11px;text-transform:uppercase;font-weight:700;letter-spacing:.05em}
-.bpmrow{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0}
-.bpmrow .v{font-size:56px;min-width:120px;text-align:center}
-.bpmrow .v small{display:block;font-size:11px;letter-spacing:.08em;font-weight:700;color:var(--mute)}
-.step{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--ink);background:transparent;font-weight:700}
-.metro{display:flex;justify-content:center;margin-bottom:6px}
-.metro .btn.on{background:var(--acc);border-color:var(--acc);color:var(--paper)}
-textarea,input[type=text],input[type=number],input[type=time],input[type=email],input[type=password],select{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;font-size:16px}
+/* rituale come la lista dei giorni */
+.check{display:flex;gap:12px;align-items:center;padding:9px 0;background:none;border:0;width:100%;text-align:left;min-height:44px;font-size:16px}
+.check .box{width:20px;height:20px;border:1.5px solid var(--ink);border-radius:3px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;color:var(--on-red)}
+.check.on .box{background:var(--red);border-color:var(--red)}
+.check.on .t{text-decoration:line-through;text-decoration-color:var(--red);color:var(--mute)}
+
+/* seduta in corso: l'arco dei blocchi come WOVE */
+.arc svg{display:block;width:100%;height:auto;overflow:visible}
+.timer{font-size:clamp(96px,30vw,150px);text-align:center;margin:10px 0 4px}
+.timer.over{color:var(--red)}
+.tsub{text-align:center;color:var(--mute);margin-bottom:18px}
+.ctrl{display:flex;gap:14px;justify-content:center;align-items:center;margin-bottom:12px}
+.round{width:88px;height:88px;border-radius:50%;border:0;background:var(--ink);color:var(--paper);font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:.08em}
+.round.paused{background:var(--red);color:var(--on-red)}
+.distr{display:flex;flex-direction:column;align-items:center;gap:3px;width:88px;height:88px;justify-content:center;border:1.5px solid var(--ink);border-radius:50%;background:transparent}
+.distr b{font-size:28px;font-weight:800;line-height:1;letter-spacing:-.04em}
+.distr span{font-size:9px;text-transform:uppercase;font-weight:700;letter-spacing:.08em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--faint);border-radius:6px;padding:7px 10px;background:transparent;font-size:14px;min-height:38px}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.bpmrow{display:flex;align-items:center;justify-content:center;gap:6px;margin:14px 0 8px}
+.bpmrow .v{font-size:64px;min-width:124px;text-align:center}
+.bpmrow .v small{display:block;font-size:10px;letter-spacing:.14em;font-weight:600;color:var(--mute);margin-top:6px}
+.step{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--ink);background:transparent;font-weight:600}
+.metro{display:flex;justify-content:center;margin-top:4px}
+.metro .btn.on{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.box{border-top:1.5px solid var(--ink);padding-top:14px;margin-top:16px}
+textarea,input[type=text],input[type=number],input[type=time],input[type=email],input[type=password],select{width:100%;border:1px solid var(--faint);background:transparent;border-radius:8px;padding:11px 12px;font-size:16px}
 textarea{min-height:76px;resize:vertical}
 
-/* calendario */
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.cal .h{font-size:10px;text-align:center;color:var(--mute);text-transform:uppercase;font-weight:700;letter-spacing:.06em}
-.cal .d{aspect-ratio:1;border-radius:12px;border:0;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;position:relative;padding:0;font-size:14px}
-.cal .d small{font-size:9px;opacity:.75;line-height:1}
-.cal .d.ok{background:var(--ink);color:var(--paper)}
-.cal .d.part{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
-.cal .d.rest{background:transparent;border:1.5px dashed var(--line);color:var(--mute)}
-.cal .d.fut{opacity:.4}
-.cal .d.today{box-shadow:inset 0 0 0 2px var(--acc)}
-.cal .d.ok.today{box-shadow:0 0 0 2px var(--hi)}
-.cal .d.sel{outline:2px solid var(--hi);outline-offset:2px}
-.cal .d .dot{position:absolute;top:5px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--hi)}
-.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--mute);margin-top:10px}
-.legend i{display:inline-block;width:11px;height:11px;border-radius:4px;vertical-align:-1px;margin-right:4px;background:var(--soft)}
-.legend i.ok{background:var(--ink)}.legend i.part{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
-.legend i.dot{width:6px;height:6px;border-radius:50%;background:var(--hi);vertical-align:1px}
+/* fatto */
+.done .n{font-size:120px}
+.done .n small{font-size:30px;letter-spacing:0;font-weight:500}
+.pt{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-right:8px;vertical-align:0}
 
-/* metro */
-.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.kpi{background:var(--card);border-radius:16px;padding:12px 14px}
-.kpi .v{font-size:44px}
-.kpi .v small{font-size:15px;font-weight:500;letter-spacing:0}
-.kpi .l{font-size:12px;color:var(--mute);margin-top:4px}
-.bars{display:flex;flex-direction:column;gap:8px}
-.bar{display:grid;grid-template-columns:110px 1fr 44px;gap:10px;align-items:center;font-size:13px}
-.bar .t{height:10px;border-radius:5px;background:var(--soft);overflow:hidden}
-.bar .t i{display:block;height:100%;background:var(--ink);border-radius:5px}
+/* calendario a cerchi */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:8px 7px}
+.cal .h{font-size:11px;text-align:center;color:var(--mute);text-transform:uppercase;font-weight:500}
+.cal .d{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;color:inherit}
+.cal .c{width:100%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:12px;font-variant-numeric:tabular-nums;background:var(--soft);color:var(--mute)}
+.cal .ok .c{background:var(--ink);color:var(--paper)}
+.cal .part .c{background:none;box-shadow:inset 0 0 0 2px var(--ink);color:var(--ink);font-weight:600}
+.cal .rest .c,.cal .fut .c,.cal .pre .c{background:none;box-shadow:inset 0 0 0 1.5px var(--faint);color:var(--faint)}
+.cal .today .c{background:none;box-shadow:inset 0 0 0 2px var(--red);color:var(--red);font-weight:700}
+.cal .today.ok .c{background:var(--red);box-shadow:none;color:var(--on-red)}
+.cal .sel .c{outline:1.5px solid var(--ink);outline-offset:3px}
+.cal .d i{width:4px;height:4px;border-radius:50%;background:var(--ink);visibility:hidden}
+.cal .d.slot i{visibility:visible}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mute);margin-top:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--soft)}
+.legend i.ok{background:var(--ink)}.legend i.part{background:none;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.legend i.today{background:var(--red)}.legend i.slot{width:4px;height:4px;background:var(--ink)}
+.monthnav{display:flex;align-items:center;gap:22px;margin:4px 0 18px}
+.monthnav button{background:none;border:0;font-size:22px;padding:6px 4px;min-width:40px;min-height:40px}
+.big{display:flex;align-items:flex-end;gap:14px}
+.big .n{font-size:132px}
+.big .t{padding-bottom:10px}
+.big .t b{display:block;font-size:22px;text-transform:uppercase;font-weight:500;line-height:1.05}
+
+/* numeri */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:18px 16px}
+.kpi{border-top:1.5px solid var(--ink);padding-top:10px}
+.kpi .v{font-size:60px}
+.kpi .v small{font-size:18px;font-weight:500;letter-spacing:0;color:var(--mute)}
+.kpi .l{font-size:13px;color:var(--mute);margin-top:6px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:112px 1fr 44px;gap:10px;align-items:center;font-size:14px}
+.bar .t{height:6px;background:var(--soft)}
+.bar .t i{display:block;height:100%;background:var(--ink)}
 .bar .n{text-align:right;font-variant-numeric:tabular-nums}
 svg text{font-family:Archivo,sans-serif}
-.ex{padding:12px 0;border-top:1px solid var(--line)}
+.ex{padding:14px 0;border-top:1px solid var(--faint)}
 .ex:first-child{border-top:0}
+.ex .v{font-size:40px}
 
-/* sessione nel dettaglio del giorno */
-.sess{padding:10px 0;border-top:1px solid var(--line)}
+/* percorso del ciclo */
+.route svg{display:block;width:100%;height:auto}
+.stations{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;font-size:12px;line-height:1.25}
+.stations div{text-align:center}
+.stations b{display:block;font-size:13px}
+.wrow{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--faint);padding:14px 0}
+.wrow .t{font-size:30px;font-weight:800;text-transform:uppercase;letter-spacing:-.02em;line-height:1}
+.wrow.on .t{color:var(--red)}
+.wrow .o{font-size:14px;margin-top:6px}
+.edit{background:none;border:0;padding:0;text-align:left;width:100%}
+
+.sess{padding:12px 0;border-top:1px solid var(--faint)}
 .sess:first-child{border-top:0}
 .sess ul{margin:6px 0;padding-left:18px}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--faint);border-radius:4px;margin-left:6px;vertical-align:2px}
 
-/* barra in basso */
-#tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0));display:flex;gap:4px;background:var(--ink);padding:5px;border-radius:99px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:5}
-#tabs button{border:0;background:transparent;color:var(--paper);padding:10px 14px;border-radius:99px;font-weight:750;font-size:12px;text-transform:uppercase;letter-spacing:.05em;min-height:44px}
+/* barra in basso: blocchi neri come il "Close" di Industrial */
+#tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0));display:flex;gap:2px;background:var(--ink);padding:4px;border-radius:12px;z-index:5;box-shadow:0 10px 30px rgba(0,0,0,.16)}
+#tabs button{border:0;background:transparent;color:var(--paper);padding:10px 13px;border-radius:9px;font-weight:600;font-size:13px;min-height:44px}
+#tabs button sup{opacity:.55;margin-right:3px;top:2px;font-size:9px}
 #tabs button.on{background:var(--paper);color:var(--ink)}
-#tabs button .liv{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--hi);margin-left:5px;vertical-align:1px}
+#tabs button.on sup{color:var(--red);opacity:1}
+#tabs button .liv{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-left:5px;vertical-align:1px}
 
-dialog{border:0;border-radius:22px;padding:0;background:var(--paper);color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
-dialog::backdrop{background:rgba(10,20,14,.5)}
+dialog{border:0;border-radius:14px;padding:0;background:var(--paper);color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(10,10,10,.45)}
 .frm{padding:20px;display:flex;flex-direction:column;gap:12px}
-.frm label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:650}
+.frm label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}
 .frm label.inline{flex-direction:row;align-items:center;gap:10px}
-.frm label.inline input{width:22px;height:22px}
+.frm label.inline input{width:22px;height:22px;accent-color:var(--red)}
 .frm .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .frm .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0));background:var(--hi);color:var(--hi-ink);padding:10px 16px;border-radius:99px;font-weight:700;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0));background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;white-space:nowrap}
 #toast.on{opacity:1}
 .login{max-width:420px;margin:30px auto}
 .login form{display:flex;flex-direction:column;gap:12px;margin-top:16px}
-.edit{background:none;border:0;padding:6px 0;text-align:left;width:100%}
 </style></head><body>
-<header id="top"><span class="word">practice</span><span id="sync"><i></i><span>…</span></span></header>
+<header id="top"><span class="word"><i></i>practice</span><span id="sync"><i></i><span>…</span></span></header>
 <main id="main"></main>
 <nav id="tabs" hidden></nav>
 <dialog id="dlg"></dialog>
@@ -281,22 +320,64 @@ async function finishLive(){
   render();
 }
 
+/* ===== disegni ===== */
+/* le linee della catena (dal poster delle linee e della palla rossa): ogni linea è un giorno di fila col minimo.
+   Il fascio scende, curva e finisce nella palla di oggi; la figurina la spinge. Palla piena = oggi il minimo c'è. */
+function chainArt(){
+  const c=chain(),done=dayInfo(ymd()).ok;
+  const n=Math.max(1,Math.min(c,40)),W=358,s=Math.min(6,Math.max(2.2,90/n)),R0=16,cx=64,cy=40;
+  const bundle=(n-1)*s,yb=cy+R0+bundle,R=Math.max(34,bundle/2+4),bx=W-R-2,by=yb-R,H=Math.ceil(yb+6);
+  let p="";
+  for(let i=0;i<n;i++){const r=R0+i*s;p+=`<path d="M${(cx-r).toFixed(1)} 0V${cy}A${r.toFixed(1)} ${r.toFixed(1)} 0 0 0 ${cx} ${(cy+r).toFixed(1)}H${bx}"/>`;}
+  const yh=yb-27.6,xh=bx-Math.sqrt(Math.max(0,R*R-(yh-by)*(yh-by)));
+  return `<div class="chainart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${c} giorni di fila: una linea per giorno">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.3" ${c?"":'stroke-dasharray="3 4" stroke-opacity=".4"'}>${p}</g>
+    <circle cx="${bx}" cy="${by}" r="${R}" fill="${done?"var(--red)":"var(--paper)"}" stroke="var(--red)" stroke-width="${done?0:2.5}"/>
+    ${figure(xh-1,yb)}</svg>
+    <div class="lab"><b>${c?`${c} ${c===1?"giorno":"giorni"} di fila`:"Oggi si comincia"}</b><span class="cap">${c?"una linea per giorno":"la prima linea"}</span></div></div>`;
+}
+/* la figurina che spinge: mani in (x,y-24), piedi sulla linea più bassa */
+function figure(x,y){
+  return `<g transform="translate(${x.toFixed(1)} ${y}) scale(1.15)" stroke="var(--ink)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <circle cx="-4.5" cy="-31.5" r="3.6" fill="var(--ink)" stroke="none"/>
+    <path d="M-17 -13.5L-8 -25" stroke-width="5"/>
+    <path d="M-8 -25L-1 -26.5M-8 -24L-1 -22" stroke-width="2.2"/>
+    <path d="M-17 -13L-24 -6.5L-31 -0.5M-16 -13L-10 -7L-12.5 -0.5" stroke-width="2.6"/></g>`;
+}
+/* l'arco dei blocchi (da WOVE): il blocco attivo grande, gli altri sbiaditi e ruotati lungo la curva */
+function arcHtml(L){
+  const W=358,H=200,cx=-170,cy=100,r=230,step=19;
+  let s=`<div class="arc"><svg style="overflow:hidden" viewBox="0 0 ${W} ${H}" role="img" aria-label="Blocco ${L.i+1} di ${L.blocchi.length}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--faint)"/>`;
+  L.blocchi.forEach((b,j)=>{
+    const d=j-L.i;if(Math.abs(d)>3)return;
+    const a=d*step*Math.PI/180,x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+    if(!d){s+=`<circle cx="${x}" cy="${y}" r="4.5" fill="var(--red)"/>
+      <text x="${x+20}" y="${y+22}" font-size="66" font-weight="800" letter-spacing="-3" fill="var(--ink)">${pad(j+1)}</text>
+      <text x="${x+112}" y="${y-2}" font-size="19" font-weight="700" fill="var(--ink)">${esc(b.nome)}</text>
+      <text x="${x+112}" y="${y+18}" font-size="14" fill="var(--ink)" fill-opacity=".55">${b.prev} minuti</text>`;return;}
+    const tx=cx+(r+16)*Math.cos(a),ty=cy+(r+16)*Math.sin(a),deg=a*180/Math.PI;
+    s+=`<circle cx="${x}" cy="${y}" r="3" fill="var(--ink)" fill-opacity="${d<0?.7:.3}"/>
+      <text x="${tx}" y="${ty}" transform="rotate(${deg.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" dominant-baseline="middle" font-size="28" font-weight="800" letter-spacing="-1" fill="var(--ink)" fill-opacity="${d<0?.35:.16}">${pad(j+1)}</text>`;
+  });
+  return s+"</svg></div>";
+}
+
 /* ===== schermata OGGI ===== */
 function dateHead(t){
-  const d=parseD(t),w=weekOf(t),c=chain();
-  return `<div class="datehead"><span class="num big">${d.getDate()}</span><div class="side"><span class="cap">${GG[d.getDay()]}</span><b>${MESI[d.getMonth()]}</b>
-    ${w?`<span class="cap">Settimana ${w.n} · ${esc(w.titolo)}</span>`:""}</div></div>
-    ${c?`<span class="chainbadge">● ${c} ${c===1?"giorno":"giorni"} di fila</span>`:""}`;
+  const d=parseD(t),w=weekOf(t);
+  return `<div class="dh"><div class="n heavy">${d.getDate()}</div>
+    <div class="meta"><div><div class="m">${MESI[d.getMonth()]}</div><div class="y">${d.getFullYear()}</div></div><div class="w">${GG[d.getDay()].slice(0,3).replace(/^./,c=>c.toUpperCase())}</div></div>
+    ${w?`<div class="wk"><b>Settimana ${w.n}</b> · ${esc(w.titolo)}</div>`:""}</div>`;
 }
 function vOggi(){
-  const t=ymd();let h=dateHead(t);
+  const t=ymd();
   if(LIVE&&LIVE.data!==t){
     const d=parseD(LIVE.data);
-    return h+`<section><div class="card"><h2>Seduta aperta</h2><p>La seduta di ${GG[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]} è rimasta aperta. Salvala con i minuti fatti, oppure scartala.</p>
-      <div class="row"><button class="btn full" data-act="stale-save">Salvala</button><button class="btn" data-act="stale-drop">Scartala</button></div></div></section>`;
+    return dateHead(t)+`<section><h2>Seduta aperta</h2><p>La seduta di ${GG[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]} è rimasta aperta. Salvala con i minuti fatti, oppure scartala.</p>
+      <div class="row"><button class="btn full" data-act="stale-save">Salvala</button><button class="btn" data-act="stale-drop">Scartala</button></div></section>`;
   }
-  if(LIVE)return h+vLive();
-  const info=dayInfo(t);
+  if(LIVE)return vLive();
+  const info=dayInfo(t),h=dateHead(t)+chainArt();
   if(info.ss.length&&!ui.again)return h+vDone(info);
   return h+vStart(t);
 }
@@ -305,75 +386,70 @@ function vStart(t){
   if(!w)return `<section><p>Il ciclo parte il ${parseD(p.inizio).getDate()} ${MESI[parseD(p.inizio).getMonth()]}.</p></section>`;
   if(!ui.giornata||!w.giornate.includes(ui.giornata))ui.giornata=w.giornate[0];
   const g=ui.giornata,bl=dayBlocks(g);
-  const pills=Object.keys(GIORNATE).map(k=>{
+  const seg=Object.keys(GIORNATE).map(k=>{
     const open=w.giornate.includes(k),from=p.calendario.find(x=>x.giornate.includes(k));
-    return `<button class="pill ${k===g?"on":""}" data-act="giornata" data-g="${k}" ${open?"":"disabled"}>${GIORNATE[k]} ${dayMin(k)}' ${open?"":`<small>· sett. ${from?from.n:"–"}</small>`}</button>`;
+    return `<button class="${k===g?"on":""}" data-act="giornata" data-g="${k}" ${open?"":"disabled"}>${GIORNATE[k]} ${dayMin(k)}'<small>${open?"":"dalla sett. "+(from?from.n:"–")}</small></button>`;
   }).join("");
-  const RIT=[["tel","Telefono in modalità concentrazione, lontano"],["pronta","Chitarra accordata, metronomo e cuffie pronti"],["chiaro","So cosa faccio: ho letto i blocchi qui sotto"]];
+  const RIT=[["tel","Telefono in modalità concentrazione, lontano"],["pronta","Chitarra accordata, metronomo e cuffie pronti"],["chiaro","So cosa faccio: ho letto i blocchi"]];
   const allRit=RIT.every(([k])=>ui.rit[k]);
-  const now=new Date(),late=hhmm(now)>=p.slot;
-  const rLeft=p.riposi-restsUpTo(t);
+  const now=new Date(),late=hhmm(now)>=p.slot,rLeft=p.riposi-restsUpTo(t);
   return `<section><div class="nota">${esc(w.obiettivo)}</div></section>
-  <section><div class="cap" style="margin-bottom:8px">Com'è la giornata</div><div class="pills">${pills}</div>
-    <ul class="blist">${bl.map(b=>`<li><span class="m">${b.min}<small>'</small></span><div><b>${esc(b.nome)}</b><div class="f">${esc(b.fonte)}</div></div></li>`).join("")}</ul></section>
-  <section><div class="cap">Rituale d'inizio</div>
-    ${RIT.map(([k,l])=>`<button class="check ${ui.rit[k]?"on":""}" data-act="rit" data-k="${k}"><span class="box">${ui.rit[k]?"✓":""}</span>${l}</button>`).join("")}
-    ${late?`<p class="mute" style="margin-top:8px">Sono le ${hhmm(now)}, oltre lo slot delle ${p.slot}. Fallo lo stesso: conta per la catena, e il dato "prima delle ${p.slot}" dirà la verità.</p>`:""}
-    <button class="btn full wide" style="margin-top:10px;min-height:56px;font-size:17px" data-act="start" ${allRit?"":"disabled"}>Inizia · ${dayMin(g)} minuti</button>
+  <section><div class="cap" style="margin-bottom:10px">Com'è la giornata</div><div class="seg">${seg}</div>
+    <ol class="nl" style="margin-top:18px">${bl.map((b,i)=>`<li><sup>${pad(i+1)}</sup><span class="nm">${esc(b.nome)}</span><span class="mn">${b.min}'</span><span class="f">${esc(b.fonte)}</span></li>`).join("")}</ol></section>
+  <section><div class="cap" style="margin-bottom:4px">Rituale d'inizio</div>
+    ${RIT.map(([k,l])=>`<button class="check ${ui.rit[k]?"on":""}" data-act="rit" data-k="${k}"><span class="box">${ui.rit[k]?"✓":""}</span><span class="t">${l}</span></button>`).join("")}
+    ${late?`<p class="mute" style="margin-top:8px;font-size:13px">Sono le ${hhmm(now)}, oltre lo slot delle ${p.slot}. Fallo lo stesso: conta per la catena, e il dato "prima delle ${p.slot}" dirà la verità.</p>`:""}
+    <button class="btn ${allRit?"red":"full"} wide" style="margin-top:14px;min-height:58px;font-size:17px" data-act="start" ${allRit?"":"disabled"}>Inizia · ${dayMin(g)} minuti</button>
   </section>
   <section class="row sp"><button class="link" data-act="manual" data-d="${t}">Segna una seduta fatta senza app</button>
     ${rLeft>0?`<button class="link" data-act="rest" data-d="${t}">Oggi riposo</button>`:""}</section>`;
 }
 function vDone(info){
-  const p=P(),c=chain();
-  if(!info.work.length&&info.rest)return `<section><div class="card"><h2>Giorno di riposo</h2><p class="mute">${info.restOk?"Programmato: la catena tiene.":"Oltre i riposi della settimana: la catena si ferma qui."}</p>
-    <div class="row"><button class="btn" data-act="unrest" data-d="${ymd()}">Annulla il riposo</button><button class="btn" data-act="again">Studio lo stesso</button></div></div></section>`;
-  return `<section><div class="card ${info.ok?"hi":""}">
-    <div class="cap">${info.ok?"Minimo fatto":"Oggi finora"}</div>
-    <div class="num" style="font-size:88px">${mins(info.tot)}<small style="font-size:22px;font-weight:500">'</small></div>
-    <p>${info.ok?`Il minimo di ${p.minimo}' c'è.`:`Mancano ${mins(p.minimo-info.tot)}' al minimo.`} ${info.slot?`Prima delle ${p.slot} ✓`:`Fuori slot (dopo le ${p.slot}).`}</p>
-    ${c?`<p><b>${c} ${c===1?"giorno":"giorni"} di fila.</b></p>`:""}
-  </div>
-  ${info.work.map(sessHtml).join("")}
+  const p=P();
+  if(!info.work.length&&info.rest)return `<section><h2>Giorno di riposo</h2><p class="mute">${info.restOk?"Programmato: la catena tiene.":"Oltre i riposi della settimana: la catena si ferma qui."}</p>
+    <div class="row"><button class="btn" data-act="unrest" data-d="${ymd()}">Annulla il riposo</button><button class="btn" data-act="again">Studio lo stesso</button></div></section>`;
+  return `<section class="done"><div class="cap">${info.ok?'<span class="pt"></span>Minimo fatto':"Oggi finora"}</div>
+    <div class="n heavy" style="margin-top:10px">${mins(info.tot)}<small>min</small></div>
+    <p style="margin-top:12px">${info.ok?`Il minimo di ${p.minimo}' c'è.`:`Mancano ${mins(p.minimo-info.tot)}' al minimo.`} ${info.slot?`Prima delle ${p.slot}.`:`Fuori slot (dopo le ${p.slot}).`}</p></section>
+  <section>${info.work.map(sessHtml).join("")}
   <div class="row" style="margin-top:12px"><button class="btn" data-act="again">Un'altra seduta</button><button class="btn" data-act="tab" data-t="metro">Vedi i numeri</button></div></section>`;
 }
 function vLive(){
-  const L=LIVE,b=cur(),bd=blockOf(b.k)||{},n=L.blocchi.length,last=L.i===n-1;
+  const L=LIVE,b=cur(),bd=blockOf(b.k)||{},n=L.blocchi.length,last=L.i===n-1,d=parseD(L.data);
   const e=b.es&&S.esercizi[b.es];
-  let h=`<section><div class="segs">${L.blocchi.map((x,j)=>`<span class="${j<L.i?"done":j===L.i?"on":""}"></span>`).join("")}</div>
-    <div class="cap">Blocco ${L.i+1} di ${n} · giornata ${GIORNATE[L.giornata]||""}</div>
-    <h1 class="bname">${esc(b.nome)}</h1>
-    <p><b>${esc(bd.obiettivo||"")}</b></p>
-    <p class="mute">${esc(bd.fonte||"")}</p>
+  let h=`<div class="minihead"><span>${GG[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]}</span><span>Giornata ${(GIORNATE[L.giornata]||"").toLowerCase()} · ${L.i+1}/${n}</span></div>
+    ${arcHtml(L)}
+    <section class="flush" style="padding-top:6px"><p><b>${esc(bd.obiettivo||"")}</b></p>
+    <p class="mute" style="font-size:14px">${esc(bd.fonte||"")}</p>
     ${bd.come?`<div class="nota">${esc(bd.come)}</div>`:""}`;
   if(!L.ending){
     const ms=elapsed(b),rem=b.prev*60000-ms;
-    h+=`<div id="timer" class="timer num ${rem<0?"over":""}">${rem>=0?fmt(rem):"+"+fmt(-rem)}</div>
+    h+=`<div id="timer" class="timer heavy ${rem<0?"over":""}">${rem>=0?fmt(rem):"+"+fmt(-rem)}</div>
       <div class="tsub">di ${b.prev}:00${rem<0?" · tempo pieno, chiudi quando vuoi":""}</div>
       <div class="ctrl"><button class="round ${b.run?"":"paused"}" data-act="toggle">${b.run?"Pausa":"Avvia"}</button>
         <button class="distr" data-act="distr"><b>${b.distr}</b><span>Ero altrove</span></button></div>
       <p class="mute" style="text-align:center;font-size:12px">Tocca "Ero altrove" quando ti accorgi di esserti distratta. È un dato, non un voto.</p>`;
     h+=exPicker(b,e);
-    h+=`<button class="btn full wide" style="min-height:54px;margin-top:14px" data-act="endblock">Fine blocco →</button>
+    h+=`<button class="btn full wide" style="min-height:56px;margin-top:18px" data-act="endblock">Fine blocco →</button>
       <div class="row sp"><button class="link" data-act="closehere">Chiudi qui la seduta</button><button class="link" data-act="abort">Annulla seduta</button></div>`;
   }else{
-    h+=`<div class="card"><h2>Com'è andata?</h2>
+    h+=`<div class="box"><h2>Com'è andata?</h2>
       <div class="cap" style="margin:4px 0 8px">Concentrazione</div>
-      <div class="pills">${[1,2,3].map(v=>`<button class="pill ${b.focus===v?"on":""}" data-act="focus" data-v="${v}">${FOCUS[v]}</button>`).join("")}</div>
-      ${e&&e.bpm?`<div class="cap" style="margin:16px 0 0">BPM più alto suonato pulito · ${esc(e.nome)}</div>${bpmStepper(b)}`:""}
-      <div class="cap" style="margin:14px 0 6px">Nota (facoltativa)</div>
+      <div class="seg">${[1,2,3].map(v=>`<button class="${b.focus===v?"on":""}" data-act="focus" data-v="${v}">${FOCUS[v]}</button>`).join("")}</div>
+      ${e&&e.bpm?`<div class="cap" style="margin:18px 0 0">BPM più alto suonato pulito · ${esc(e.nome)}</div>${bpmStepper(b)}`:""}
+      <div class="cap" style="margin:16px 0 6px">Nota (facoltativa)</div>
       <textarea id="bnota" placeholder="Cosa ha funzionato, cosa è da sbloccare">${esc(b.nota)}</textarea>
-      <button class="btn full wide" style="min-height:54px;margin-top:12px" data-act="next">${last?"Chiudi la seduta ✓":"Avanti → "+esc(L.blocchi[L.i+1].nome)}</button>
+      <button class="btn ${last?"red":"full"} wide" style="min-height:56px;margin-top:14px" data-act="next">${last?"Chiudi la seduta ✓":"Avanti → "+esc(L.blocchi[L.i+1].nome)}</button>
       <button class="link" data-act="back">← Torna al timer</button></div>`;
   }
   return h+"</section>";
 }
 function exPicker(b,e){
   const l=exList(b.k);if(!l.length)return "";
-  let h=`<div class="card"><div class="cap" style="margin-bottom:8px">Esercizio</div><div class="pills">${l.map(x=>`<button class="pill ${x.id===b.es?"on":""}" data-act="pickex" data-id="${x.id}">${esc(x.nome)}</button>`).join("")}</div>`;
+  let h=`<div class="box"><div class="cap" style="margin-bottom:10px">Esercizio</div><div class="chips">${l.map(x=>`<button class="chip ${x.id===b.es?"on":""}" data-act="pickex" data-id="${x.id}">${esc(x.nome)}</button>`).join("")}</div>`;
   if(e){
     const lb=lastBpm(b.es);
-    if(e.nota)h+=`<div class="nota">${esc(e.nota)}</div>`;
+    if(e.nota)h+=`<div class="nota" style="font-size:14px">${esc(e.nota)}</div>`;
     if(e.bpm){
       h+=bpmStepper(b);
       h+=`<p class="mute" style="text-align:center;font-size:13px">${lb?`Ultimo pulito: ${lb}`:"Primo giro"}${e.obiettivo?` · obiettivo ${e.obiettivo}`:""}</p>
@@ -383,7 +459,7 @@ function exPicker(b,e){
   return h+"</div>";
 }
 const bpmStepper=b=>`<div class="bpmrow"><button class="step" data-act="bpm" data-v="-5">−5</button><button class="step" data-act="bpm" data-v="-1">−1</button>
-  <div class="v num">${b.bpm||"–"}<small>BPM</small></div><button class="step" data-act="bpm" data-v="1">+1</button><button class="step" data-act="bpm" data-v="5">+5</button></div>`;
+  <div class="v heavy">${b.bpm||"–"}<small>BPM</small></div><button class="step" data-act="bpm" data-v="1">+1</button><button class="step" data-act="bpm" data-v="5">+5</button></div>`;
 function sessHtml(s){
   const t=s.inizio?hhmm(new Date(s.inizio)):"";
   return `<div class="sess"><div class="row sp"><b>${t?t+" · ":""}${mins(s.totale)}' ${s.manuale?'<span class="tag">a mano</span>':""}${inSlot(s)?'<span class="tag">nello slot</span>':""}</b>
@@ -395,22 +471,22 @@ function sessHtml(s){
 function vCostanza(){
   const p=P(),t=ymd(),[y,m]=ui.month.split("-").map(Number);
   const first=new Date(y,m-1,1),off=(first.getDay()+6)%7,n=new Date(y,m,0).getDate();
-  let cells=["lun","mar","mer","gio","ven","sab","dom"].map(x=>`<span class="h">${x}</span>`).join("")+"<span></span>".repeat(off);
+  let cells=["L","M","M","G","V","S","D"].map(x=>`<span class="h">${x}</span>`).join("")+"<span></span>".repeat(off);
   let okN=0,past=0,slotN=0;
   for(let d=1;d<=n;d++){
     const ds=ymd(new Date(y,m-1,d)),i=dayInfo(ds),fut=ds>t;
     if(!fut&&ds>=p.inizio){past++;if(i.ok)okN++;if(i.slot)slotN++;}
-    const cls=[i.ok?"ok":i.tot>0?"part":i.rest?"rest":"",fut?"fut":"",ds===t?"today":"",ds===ui.sel?"sel":""].join(" ");
-    cells+=`<button class="d ${cls}" data-act="selday" data-d="${ds}">${i.slot?'<i class="dot"></i>':""}${d}<small>${i.tot?mins(i.tot)+"'":i.rest?"R":""}</small></button>`;
+    const cls=[i.ok?"ok":i.tot>0?"part":i.rest?"rest":"",fut?"fut":"",ds<p.inizio&&!i.tot?"pre":"",ds===t?"today":"",ds===ui.sel?"sel":"",i.slot?"slot":""].join(" ");
+    cells+=`<button class="d ${cls}" data-act="selday" data-d="${ds}" aria-label="${d} ${MESI[m-1]}${i.tot?", "+mins(i.tot)+" minuti":""}"><span class="c">${i.rest&&!i.tot?"R":d}</span><i></i></button>`;
   }
   const c=chain(),best=bestChain(),sel=parseD(ui.sel),si=dayInfo(ui.sel);
-  return `<section><h1>Costanza</h1></section>
-  <section><div class="row" style="align-items:flex-end;gap:14px"><span class="num" style="font-size:110px">${c}</span><div style="padding-bottom:12px"><b style="text-transform:uppercase;font-weight:850">${c===1?"giorno":"giorni"} di fila</b><div class="mute">col minimo di ${p.minimo}' · record ${best}</div></div></div>
-    <p class="mute">${p.riposi?`${p.riposi} riposo programmato a settimana non spezza la catena.`:""}</p></section>
-  <section><div class="row sp" style="margin-bottom:12px"><button class="step" data-act="month" data-v="-1">‹</button><h2 style="margin:0">${MESI[m-1]} ${y}</h2><button class="step" data-act="month" data-v="1">›</button></div>
-    <div class="cal">${cells}</div>
-    <div class="legend"><span><i class="ok"></i>minimo fatto</span><span><i class="part"></i>meno del minimo</span><span><i class="dot"></i>prima delle ${p.slot}</span><span>R riposo</span></div>
-    ${past?`<p style="margin-top:12px"><b>${okN}/${past}</b> giorni col minimo · <b>${slotN}/${past}</b> nello slot</p>`:""}</section>
+  return `<section><div class="big"><span class="n heavy">${c}</span><div class="t"><b>${c===1?"giorno":"giorni"}<br>di fila</b><span class="mute">record ${best}</span></div></div>
+    <p class="mute" style="margin-top:14px;font-size:13px">Col minimo di ${p.minimo}'. ${p.riposi?`${p.riposi} riposo programmato a settimana non spezza la catena.`:""}</p></section>
+  <section><div class="row sp"><div><div style="font-size:24px;text-transform:uppercase;line-height:1.05">${MESI[m-1]}</div><div class="mute" style="font-size:24px;line-height:1.05">${y}</div></div>
+    <div class="monthnav"><button data-act="month" data-v="-1" aria-label="Mese prima">‹</button><button data-act="month" data-v="1" aria-label="Mese dopo">›</button></div></div>
+    <div class="cal" style="margin-top:10px">${cells}</div>
+    <div class="legend"><span><i class="ok"></i>minimo fatto</span><span><i class="part"></i>meno del minimo</span><span><i class="today"></i>oggi</span><span><i class="slot"></i>prima delle ${p.slot}</span><span>R riposo</span></div>
+    ${past?`<p style="margin-top:14px"><b>${okN}/${past}</b> giorni col minimo · <b>${slotN}/${past}</b> nello slot</p>`:""}</section>
   <section><h2>${GG[sel.getDay()]} ${sel.getDate()} ${MESI[sel.getMonth()]}</h2>
     ${si.ss.length?si.work.map(sessHtml).join("")+(si.rest?`<p>Riposo ${si.restOk?"programmato":"(oltre il limite della settimana)"} · <button class="link" data-act="unrest" data-d="${ui.sel}">annulla</button></p>`:""):`<p class="mute">${ui.sel>t?"Ancora da vivere.":"Nessuna seduta."}</p>`}
     ${ui.sel<=t?`<div class="row" style="margin-top:8px"><button class="btn" data-act="manual" data-d="${ui.sel}">+ Segna una seduta</button>${!si.rest&&p.riposi-restsUpTo(ui.sel)>0?`<button class="btn" data-act="rest" data-d="${ui.sel}">Riposo</button>`:""}</div>`:""}
@@ -429,33 +505,33 @@ function weekStats(){
 }
 function vMetro(){
   const w=weekStats(),p=P();
-  const kpi=(v,u,l)=>`<div class="kpi"><div class="v num">${v}${u?`<small>${u}</small>`:""}</div><div class="l">${l}</div></div>`;
+  const kpi=(v,u,l)=>`<div class="kpi"><div class="v heavy">${v}${u?`<small>${u}</small>`:""}</div><div class="l">${l}</div></div>`;
   const fl=w.focus==null?"–":w.focus<1.67?"dispersa":w.focus<2.34?"a tratti":"dentro";
-  let h=`<section><h1>Metro</h1><p class="mute" style="margin-top:8px">Ultimi 7 giorni. Il metro lo tiene l'app: niente "bravissima", solo numeri.</p></section>
-  <section><div class="kpis">${kpi(w.ok,"/7","giorni col minimo")+kpi(mins(w.tot),"'","minuti suonati")+kpi(w.slot,"/7",`giorni prima delle ${p.slot}`)+kpi(w.distr==null?"–":w.distr.toFixed(1),"","volte \"altrove\" per seduta")}</div>
-    <p style="margin-top:12px">Concentrazione media: <b>${fl}</b>${w.focus!=null?` <span class="mute">(${w.focus.toFixed(1)} su 3)</span>`:""}</p></section>
+  let h=`<section><h1>Metro</h1><p class="mute" style="margin-top:10px">Ultimi 7 giorni. Niente "bravissima", solo numeri.</p></section>
+  <section class="flush"><div class="kpis">${kpi(w.ok,"/7","giorni col minimo")+kpi(mins(w.tot),"min","suonati")+kpi(w.slot,"/7",`giorni prima delle ${p.slot}`)+kpi(w.distr==null?"–":w.distr.toFixed(1),"","volte \"altrove\" per seduta")}</div>
+    <p style="margin-top:18px">Concentrazione media: <b>${fl}</b>${w.focus!=null?` <span class="mute">(${w.focus.toFixed(1)} su 3)</span>`:""}</p></section>
   <section><h2>Minuti al giorno</h2>${dayChart(lastDays(14))}</section>`;
   const pb=Object.entries(w.perBlock).sort((a,b)=>b[1]-a[1]),mx=Math.max(1,...pb.map(x=>x[1]));
   if(pb.length)h+=`<section><h2>Dove va il tempo</h2><div class="bars">${pb.map(([k,v])=>`<div class="bar"><span>${esc(k)}</span><span class="t"><i style="width:${v/mx*100}%"></i></span><span class="n">${mins(v)}'</span></div>`).join("")}</div></section>`;
   const exs=exList().filter(e=>e.bpm);
   h+=`<section><h2>BPM puliti</h2>${exs.map(e=>{const hh=exHist(e.id),lb=lastBpm(e.id);
-    return `<div class="ex"><div class="row sp"><b>${esc(e.nome)}</b><span class="num" style="font-size:30px">${lb||"–"}</span></div>
-      <div class="mute" style="font-size:12px">${hh.base?`partenza ${hh.base.bpm}`:"nessun dato di partenza"}${e.obiettivo?` · obiettivo ${e.obiettivo}`:""}${hh.pts.length?` · ${hh.pts.length} ${hh.pts.length===1?"misura":"misure"} in PRACTICE`:""}</div>
+    return `<div class="ex"><div class="row sp" style="align-items:flex-end"><b>${esc(e.nome)}</b><span class="v heavy">${lb||"–"}</span></div>
+      <div class="mute" style="font-size:12px;margin-top:4px">${hh.base?`partenza ${hh.base.bpm}`:"nessun dato di partenza"}${e.obiettivo?` · obiettivo ${e.obiettivo}`:""}${hh.pts.length?` · ${hh.pts.length} ${hh.pts.length===1?"misura":"misure"} in PRACTICE`:""}</div>
       ${hh.pts.length?bpmChart(hh,e.obiettivo):""}</div>`;}).join("")}</section>
   <section><button class="btn full wide" data-act="coach">Copia il resoconto per il Coach</button>
     <p class="mute" style="font-size:12px;margin-top:8px">Incollalo in chat con Claude: è la base del bilancio della settimana.</p></section>`;
   return h;
 }
 function dayChart(days){
-  const W=340,H=130,pb=18,mx=Math.max(P().minimo*2,...days.map(d=>dayInfo(d).tot)),bw=W/days.length,y=v=>H-pb-(v/mx)*(H-pb-8);
+  const W=340,H=130,pb=18,mx=Math.max(P().minimo*2,...days.map(d=>dayInfo(d).tot)),bw=W/days.length,y=v=>H-pb-(v/mx)*(H-pb-8),t=ymd();
   let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Minuti suonati al giorno, ultimi 14 giorni">`;
   days.forEach((d,i)=>{const inf=dayInfo(d),x=i*bw+3,hgt=H-pb-y(inf.tot);
-    if(inf.tot)s+=`<rect x="${x}" y="${y(inf.tot)}" width="${bw-6}" height="${hgt}" rx="4" fill="${inf.ok?"var(--ink)":"none"}" stroke="var(--ink)" stroke-width="1.5"><title>${d}: ${mins(inf.tot)}'</title></rect>`;
-    else s+=`<rect x="${x}" y="${H-pb-2}" width="${bw-6}" height="2" rx="1" fill="currentColor" fill-opacity=".2"/>`;
+    if(inf.tot)s+=`<rect x="${x}" y="${y(inf.tot)}" width="${bw-6}" height="${hgt}" fill="${inf.ok?(d===t?"var(--red)":"var(--ink)"):"none"}" stroke="${d===t?"var(--red)":"var(--ink)"}" stroke-width="1.5"><title>${d}: ${mins(inf.tot)}'</title></rect>`;
+    else s+=`<rect x="${x}" y="${H-pb-1.5}" width="${bw-6}" height="1.5" fill="currentColor" fill-opacity=".25"/>`;
     if(i%2===days.length%2||i===days.length-1)s+=`<text x="${x+(bw-6)/2}" y="${H-4}" text-anchor="middle" font-size="9" fill="currentColor" fill-opacity=".6">${parseD(d).getDate()}</text>`;});
   /* la linea del minimo sopra le barre, così si legge sempre */
   const ym=y(P().minimo);
-  s+=`<line x1="0" x2="${W}" y1="${ym}" y2="${ym}" stroke="var(--acc)" stroke-width="1.5" stroke-dasharray="4 4"/><text x="0" y="${ym-5}" font-size="10" font-weight="700" fill="var(--acc)">minimo ${P().minimo}'</text>`;
+  s+=`<line x1="0" x2="${W}" y1="${ym}" y2="${ym}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 3"/><text x="0" y="${ym-5}" font-size="10" font-weight="700" fill="var(--ink)">minimo ${P().minimo}'</text>`;
   return s+"</svg>";
 }
 function bpmChart(hh,target){
@@ -465,11 +541,11 @@ function bpmChart(hh,target){
   const d0=pts[0].data,span=Math.max(1,diffDays(d0,pts[pts.length-1].data));
   const X=d=>l+(pts.length===1?(W-l-r)/2:diffDays(d0,d)/span*(W-l-r)),Y=v=>t+(1-(v-lo)/(hi-lo))*(H-t-b);
   let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="BPM puliti nel tempo">`;
-  const ref=(v,lab,dash)=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" stroke-opacity=".35" ${dash?'stroke-dasharray="3 4"':""}/><text x="${l-4}" y="${Y(v)+3}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity=".6">${v}</text><text x="${W-r}" y="${Y(v)-4}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity=".6">${lab}</text>`;
+  const ref=(v,lab,dash)=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" stroke-opacity=".35" ${dash?'stroke-dasharray="2 3"':""}/><text x="${l-4}" y="${Y(v)+3}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity=".6">${v}</text><text x="${W-r}" y="${Y(v)-4}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity=".6">${lab}</text>`;
   if(target)s+=ref(target,"obiettivo",true);
   if(hh.base)s+=ref(hh.base.bpm,"partenza",false);
-  s+=`<polyline fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round" points="${pts.map(p=>X(p.data)+","+Y(p.bpm)).join(" ")}"/>`;
-  pts.forEach(p=>{s+=`<circle cx="${X(p.data)}" cy="${Y(p.bpm)}" r="3.5" fill="var(--acc)"><title>${p.data}: ${p.bpm} BPM</title></circle>`;});
+  s+=`<polyline fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round" points="${pts.map(p=>X(p.data)+","+Y(p.bpm)).join(" ")}"/>`;
+  pts.forEach((p,i)=>{const lastP=i===pts.length-1;s+=`<circle cx="${X(p.data)}" cy="${Y(p.bpm)}" r="${lastP?5:3}" fill="${lastP?"var(--red)":"var(--ink)"}"><title>${p.data}: ${p.bpm} BPM</title></circle>`;});
   s+=`<text x="${l}" y="${H-4}" font-size="9" fill="currentColor" fill-opacity=".6">${parseD(d0).getDate()}/${parseD(d0).getMonth()+1}</text>`;
   return s+"</svg>";
 }
@@ -489,25 +565,35 @@ function coachText(){
 }
 
 /* ===== schermata PIANO ===== */
+/* il ciclo come percorso (dal poster dei cerchi rossi): una stazione per settimana, quella di adesso piena di rosso */
+function routeHtml(p,wk){
+  const n=p.calendario.length,W=358,H=64,m=40,gap=(W-2*m)/Math.max(1,n-1),y=30,R=18;
+  let s=`<div class="route"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Le ${n} settimane del ciclo"><path d="M0 ${y}H${W}" stroke="var(--ink)" stroke-width="1.3"/>`;
+  p.calendario.forEach((w,i)=>{const x=m+i*gap,now=wk&&wk.n===w.n,past=wk&&w.n<wk.n;
+    s+=`<circle cx="${x}" cy="${y}" r="${R}" fill="${now?"var(--red)":past?"var(--ink)":"var(--paper)"}" stroke="${now?"var(--red)":"var(--ink)"}" stroke-width="1.3"/>
+      <text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13" font-weight="800" fill="${now?"var(--on-red)":past?"var(--paper)":"var(--ink)"}">${pad(w.n)}</text>`;});
+  s+=`</svg><div class="stations">${p.calendario.map(w=>`<div><b>${esc(w.titolo)}</b><span class="mute">dal ${parseD(addDays(p.inizio,(w.n-1)*7)).getDate()} ${MESI[parseD(addDays(p.inizio,(w.n-1)*7)).getMonth()].slice(0,3)}</span></div>`).join("")}</div></div>`;
+  return s;
+}
 function vPiano(){
   const p=P(),wk=weekOf(ymd());
-  return `<section><h1>Piano</h1><p class="mute" style="margin-top:8px">${esc(p.nome)}. Si affina strada facendo: tocca una voce per cambiarla.</p>
+  return `<section><h1>Piano</h1><p class="mute" style="margin-top:10px">${esc(p.nome)}. Si affina strada facendo: tocca una voce per cambiarla.</p>
     ${p.coach?`<div class="nota">${esc(p.coach)}</div>`:""}</section>
-  <section><h2>Le settimane</h2>${p.calendario.map((w,i)=>`<button class="edit card ${wk&&wk.n===w.n?"hi":""}" data-act="editweek" data-i="${i}">
-      <div class="cap">Settimana ${w.n} · dal ${parseD(addDays(p.inizio,i*7)).getDate()} ${MESI[parseD(addDays(p.inizio,i*7)).getMonth()]}</div>
-      <h3 style="margin:4px 0 6px">${esc(w.titolo)}</h3><div style="font-size:13px">${esc(w.obiettivo)}</div>
+  <section class="flush">${routeHtml(p,wk)}</section>
+  <section><div class="cap" style="margin-bottom:4px">Le settimane</div>${p.calendario.map((w,i)=>`<button class="wrow ${wk&&wk.n===w.n?"on":""}" data-act="editweek" data-i="${i}">
+      <div class="t"><sup>${pad(w.n)}</sup> ${esc(w.titolo)}</div><div class="o">${esc(w.obiettivo)}</div>
       <div class="mute" style="font-size:12px;margin-top:6px">Giornate: ${w.giornate.map(g=>GIORNATE[g]).join(" · ")}</div></button>`).join("")}</section>
-  <section><h2>Le giornate</h2>${Object.keys(GIORNATE).map(g=>`<button class="edit" data-act="editday" data-g="${g}" style="border-top:1px solid var(--line);padding:10px 0">
-      <div class="row sp"><b style="text-transform:uppercase">${GIORNATE[g]}</b><span class="num" style="font-size:26px">${dayMin(g)}'</span></div>
-      <div class="mute" style="font-size:13px">${dayBlocks(g).map(b=>esc(b.nome)).join(" → ")}</div></button>`).join("")}</section>
-  <section><h2>I blocchi</h2><ul class="blist">${p.blocchi.map((b,i)=>`<li><span class="m">${b.min}<small>'</small></span><button class="edit" data-act="editblock" data-i="${i}" style="padding:0"><b>${esc(b.nome)}</b>
-      <div style="font-size:13px">${esc(b.obiettivo)}</div><div class="f">${esc(b.fonte)}</div></button></li>`).join("")}</ul>
-    <button class="btn" data-act="newblock" style="margin-top:8px">+ Nuovo blocco</button></section>
-  <section><h2>Gli esercizi</h2>${p.blocchi.filter(b=>b.esercizi).map(b=>`<div class="cap" style="margin:12px 0 4px">${esc(b.nome)}</div>
-      ${exList(b.k).map(e=>`<button class="edit" data-act="editex" data-id="${e.id}" style="border-top:1px solid var(--line);padding:9px 0"><div class="row sp"><span>${e.focus?"● ":""}${esc(e.nome)}</span><span class="mute">${e.bpm?(lastBpm(e.id)||"–")+(e.obiettivo?" → "+e.obiettivo:""):""}</span></div></button>`).join("")||'<p class="mute">Nessuno.</p>'}`).join("")}
-    <p class="mute" style="font-size:12px;margin-top:8px">● = l'esercizio proposto per primo nel blocco.</p>
+  <section><div class="cap" style="margin-bottom:4px">Le giornate</div>${Object.keys(GIORNATE).map(g=>`<button class="wrow" data-act="editday" data-g="${g}">
+      <div class="row sp"><span class="t">${GIORNATE[g]}</span><span class="heavy" style="font-size:34px">${dayMin(g)}'</span></div>
+      <div class="mute" style="font-size:13px;margin-top:4px">${dayBlocks(g).map(b=>esc(b.nome)).join(" → ")}</div></button>`).join("")}</section>
+  <section><div class="cap" style="margin-bottom:10px">I blocchi</div><ol class="nl">${p.blocchi.map((b,i)=>`<li><sup>${pad(i+1)}</sup><button class="nm" data-act="editblock" data-i="${i}">${esc(b.nome)}</button><span class="mn">${b.min}'</span>
+      <span class="f">${esc(b.obiettivo)}<br>${esc(b.fonte)}</span></li>`).join("")}</ol>
+    <button class="btn" data-act="newblock" style="margin-top:14px">+ Nuovo blocco</button></section>
+  <section><div class="cap">Gli esercizi</div>${p.blocchi.filter(b=>b.esercizi).map(b=>`<h3 style="margin:16px 0 4px">${esc(b.nome)}</h3>
+      ${exList(b.k).map(e=>`<button class="edit" data-act="editex" data-id="${e.id}" style="border-top:1px solid var(--faint);padding:10px 0"><div class="row sp"><span>${e.focus?'<span class="pt"></span>':""}${esc(e.nome)}</span><span class="mute">${e.bpm?(lastBpm(e.id)||"–")+(e.obiettivo?" → "+e.obiettivo:""):""}</span></div></button>`).join("")||'<p class="mute">Nessuno.</p>'}`).join("")}
+    <p class="mute" style="font-size:12px;margin-top:10px"><span class="pt"></span>l'esercizio proposto per primo nel blocco.</p>
     <button class="btn" data-act="newex" style="margin-top:4px">+ Nuovo esercizio</button></section>
-  <section><h2>Le regole</h2><button class="edit" data-act="editrules"><p>Minimo garantito: <b>${p.minimo} minuti</b><br>Slot: <b>prima delle ${p.slot}</b><br>Riposi che non spezzano la catena: <b>${p.riposi} a settimana</b></p></button></section>
+  <section><div class="cap" style="margin-bottom:8px">Le regole</div><button class="edit" data-act="editrules"><p style="font-size:16px">Minimo garantito: <b>${p.minimo} minuti</b><br>Slot: <b>prima delle ${p.slot}</b><br>Riposi che non spezzano la catena: <b>${p.riposi} a settimana</b></p></button></section>
   <section class="row sp"><span class="mute" style="font-size:12px">${Store.DEMO?"Modalità prova: dati solo in questo browser.":"Dati su Supabase, gli stessi su Mac e iPhone."}</span>
     ${Store.DEMO?`<button class="link" data-act="demoreset">Ricomincia la prova</button>`:`<button class="link" data-act="signout">Esci</button>`}</section>`;
 }
@@ -617,7 +703,7 @@ function render(){
   if(!booted)return;
   const tabs=[["oggi","Oggi"],["costanza","Costanza"],["metro","Metro"],["piano","Piano"]];
   $("#tabs").hidden=false;
-  $("#tabs").innerHTML=tabs.map(([k,l])=>`<button class="${ui.tab===k?"on":""}" data-act="tab" data-t="${k}">${l}${k==="oggi"&&LIVE&&ui.tab!=="oggi"?'<span class="liv"></span>':""}</button>`).join("");
+  $("#tabs").innerHTML=tabs.map(([k,l],i)=>`<button class="${ui.tab===k?"on":""}" data-act="tab" data-t="${k}"><sup>${pad(i)}</sup>${l}${k==="oggi"&&LIVE&&ui.tab!=="oggi"?'<span class="liv"></span>':""}</button>`).join("");
   $("#main").innerHTML=ui.tab==="costanza"?vCostanza():ui.tab==="metro"?vMetro():ui.tab==="piano"?vPiano():vOggi();
 }
 /* il timer si aggiorna da solo senza ridisegnare la pagina; il tempo si calcola dagli orari, quindi regge anche a schermo spento */
