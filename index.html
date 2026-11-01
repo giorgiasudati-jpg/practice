@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="PRACTICE">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#EFECE6">
+<meta name="color-scheme" content="light only">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
@@ -25,11 +26,7 @@
   --mute:rgba(18,18,18,.55); --line:rgba(18,18,18,.16); --soft:rgba(18,18,18,.07); --faint:rgba(18,18,18,.24);
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root{
-  --paper:#1E1E1E; --ink:#ECE9E3; --red:#F0462E; --on-red:#FFFFFF;
-  --mute:rgba(236,233,227,.58); --line:rgba(236,233,227,.16); --soft:rgba(236,233,227,.07); --faint:rgba(236,233,227,.26);
-  color-scheme:dark;
-}}
+/* sempre su carta chiara, come le references: niente tema scuro automatico (decisione di Giorgia, 2026-11-01) */
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;background:var(--paper);color:var(--ink);font-family:Archivo,-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;line-height:1.42;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
