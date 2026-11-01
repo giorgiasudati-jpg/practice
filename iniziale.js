@@ -38,7 +38,7 @@ window.SEED={
     },
     calendario:[
       {n:1,titolo:"Solo il minimo",giornate:["minimo"],
-        obiettivo:"30 minuti ogni giorno, entro la mattina (prima delle 13). Anche se hai più tempo: questa settimana si costruisce l'abitudine, non il volume."},
+        obiettivo:"30 minuti ogni giorno, entro la mattina (prima delle 13). È il pavimento, non il soffitto: se hai più tempo, continua con un altro blocco."},
       {n:2,titolo:"+ Vocabolario",giornate:["minimo","normale"],
         obiettivo:"Il minimo resta sacro. Nei giorni con più tempo si sblocca la giornata normale: si aggiunge il vocabolario."},
       {n:3,titolo:"+ Visualizzazione",giornate:["minimo","normale","buona"],

@@ -150,6 +150,9 @@ textarea{min-height:76px;resize:vertical}
 .cal .d{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;color:inherit}
 .cal .c{width:100%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:12px;font-variant-numeric:tabular-nums;background:var(--soft);color:var(--mute)}
 .cal .ok .c{background:var(--ink);color:var(--paper)}
+/* il doppio del minimo o più: pieno con un anello chiaro dentro (l'anello fuori è già della selezione) */
+.cal .more .c{box-shadow:inset 0 0 0 3.5px var(--ink),inset 0 0 0 5px var(--paper)}
+.cal .today.ok.more .c{box-shadow:inset 0 0 0 3.5px var(--red),inset 0 0 0 5px var(--on-red)}
 .cal .part .c{background:none;box-shadow:inset 0 0 0 2px var(--ink);color:var(--ink);font-weight:600}
 .cal .rest .c,.cal .fut .c,.cal .pre .c{background:none;box-shadow:inset 0 0 0 1.5px var(--faint);color:var(--faint)}
 .cal .today .c{background:none;box-shadow:inset 0 0 0 2px var(--red);color:var(--red);font-weight:700}
@@ -160,7 +163,7 @@ textarea{min-height:76px;resize:vertical}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mute);margin-top:14px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--soft)}
-.legend i.ok{background:var(--ink)}.legend i.part{background:none;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.legend i.ok{background:var(--ink)}.legend i.more{background:var(--ink);box-shadow:inset 0 0 0 2px var(--ink),inset 0 0 0 3px var(--paper)}.legend i.part{background:none;box-shadow:inset 0 0 0 1.5px var(--ink)}
 .legend i.today{background:var(--red)}.legend i.slot{width:4px;height:4px;background:var(--ink)}
 .monthnav{display:flex;align-items:center;gap:22px;margin:4px 0 18px}
 .monthnav button{background:none;border:0;font-size:26px;padding:6px 4px;min-width:48px;min-height:48px}
@@ -279,8 +282,8 @@ function dayInfo(date){
   const ss=sessOn(date),work=ss.filter(s=>s.giornata!=="riposo");
   const tot=work.reduce((a,s)=>a+(s.totale||0),0);
   const rest=ss.some(s=>s.giornata==="riposo");
-  const ok=tot>=P().minimo-0.5;
-  return {ss,work,tot,rest,ok,restOk:rest&&!ok&&restsUpTo(date)<=P().riposi,slot:work.some(inSlot)};
+  const ok=tot>=P().minimo-0.5,more=tot>=2*P().minimo-0.5;
+  return {ss,work,tot,rest,ok,more,restOk:rest&&!ok&&restsUpTo(date)<=P().riposi,slot:work.some(inSlot)};
 }
 const kept=i=>i.ok||i.restOk;
 function chain(){let d=ymd();if(!kept(dayInfo(d)))d=addDays(d,-1);let n=0;while(n<4000&&kept(dayInfo(d))){n++;d=addDays(d,-1);}return n;}
@@ -312,8 +315,9 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 /* ===== seduta in corso ===== */
 const elapsed=b=>b.ms+(b.run?Date.now()-b.run:0);
 function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));return pad(Math.floor(s/60))+":"+pad(s%60);}
+const newBlock=b=>{const es=b.esercizi?focusEx(b.k):null;return {k:b.k,nome:b.nome,prev:+b.min,ms:0,run:null,distr:0,es,bpm:es&&S.esercizi[es]&&S.esercizi[es].bpm?(lastBpm(es)||80):null,focus:0,nota:"",done:false};};
 function startLive(g){
-  const bl=dayBlocks(g).map(b=>{const es=b.esercizi?focusEx(b.k):null;return {k:b.k,nome:b.nome,prev:+b.min,ms:0,run:null,distr:0,es,bpm:es&&S.esercizi[es]&&S.esercizi[es].bpm?(lastBpm(es)||80):null,focus:0,nota:"",done:false};});
+  const bl=dayBlocks(g).map(newBlock);
   if(!bl.length)return;
   LIVE={data:ymd(),giornata:g,settimana:(weekOf(ymd())||{}).n||null,inizio:new Date().toISOString(),i:0,ending:false,blocchi:bl};
   bl[0].run=Date.now();saveLive();ui.rit={};ui.again=false;wake();render();
@@ -397,12 +401,10 @@ function vOggi(){
 function vStart(t){
   const p=P(),w=weekOf(t);
   if(!w)return `<section><p>Il ciclo parte il ${parseD(p.inizio).getDate()} ${MESI[parseD(p.inizio).getMonth()]}.</p></section>`;
-  if(!ui.giornata||!w.giornate.includes(ui.giornata))ui.giornata=w.giornate[0];
+  /* il minimo è il pavimento, non il soffitto: tutte le giornate sono sempre aperte (Giorgia, 2026-11-01) */
+  if(!GIORNATE[ui.giornata])ui.giornata=w.giornate[0];
   const g=ui.giornata,bl=dayBlocks(g);
-  const seg=Object.keys(GIORNATE).map(k=>{
-    const open=w.giornate.includes(k),from=p.calendario.find(x=>x.giornate.includes(k));
-    return `<button class="${k===g?"on":""}" data-act="giornata" data-g="${k}" ${open?"":"disabled"}>${GIORNATE[k]} ${dayMin(k)}'<small>${open?"":"dalla sett. "+(from?from.n:"–")}</small></button>`;
-  }).join("");
+  const seg=Object.keys(GIORNATE).map(k=>`<button class="${k===g?"on":""}" data-act="giornata" data-g="${k}">${GIORNATE[k]} ${dayMin(k)}'</button>`).join("");
   const RIT=[["tel","Telefono in modalità concentrazione, lontano"],["pronta","Chitarra accordata, metronomo e cuffie pronti"],["chiaro","So cosa faccio: ho letto i blocchi"]];
   const allRit=RIT.every(([k])=>ui.rit[k]);
   const now=new Date(),late=hhmm(now)>=p.slot,rLeft=p.riposi-restsUpTo(t);
@@ -425,7 +427,7 @@ function vDone(info){
     <div class="n heavy" style="margin-top:10px">${mins(info.tot)}<small>min</small></div>
     <p style="margin-top:12px">${info.ok?`Il minimo di ${p.minimo}' c'è.`:`Mancano ${mins(p.minimo-info.tot)}' al minimo.`} ${info.slot?`Prima delle ${p.slot}.`:`Fuori slot (dopo le ${p.slot}).`}</p></section>
   <section>${info.work.map(sessHtml).join("")}
-  <div class="row" style="margin-top:12px"><button class="btn" data-act="again">Un'altra seduta</button><button class="btn" data-act="tab" data-t="metro">Vedi i numeri</button></div></section>`;
+  <div class="row" style="margin-top:12px"><button class="btn" data-act="again">Continua a studiare</button><button class="btn" data-act="tab" data-t="metro">Vedi i numeri</button></div></section>`;
 }
 function vLive(){
   const L=LIVE,b=cur(),bd=blockOf(b.k)||{},n=L.blocchi.length,last=L.i===n-1,d=parseD(L.data);
@@ -453,6 +455,7 @@ function vLive(){
       <div class="cap" style="margin:16px 0 6px">Nota (facoltativa)</div>
       <textarea id="bnota" placeholder="Cosa ha funzionato, cosa è da sbloccare">${esc(b.nota)}</textarea>
       <button class="btn ${last?"red":"full"} wide stick" style="min-height:58px;margin-top:14px" data-act="next">${last?"Chiudi la seduta ✓":"Avanti → "+esc(L.blocchi[L.i+1].nome)}</button>
+      ${last?`<div class="cap" style="margin:22px 0 10px">Oppure continua con</div><div class="chips">${P().blocchi.map(x=>`<button class="chip" data-act="more" data-k="${x.k}">+ ${esc(x.nome)}</button>`).join("")}</div>`:""}
       <button class="link" data-act="back">← Torna al timer</button></div>`;
   }
   return h+"</section>";
@@ -489,7 +492,7 @@ function vCostanza(){
   for(let d=1;d<=n;d++){
     const ds=ymd(new Date(y,m-1,d)),i=dayInfo(ds),fut=ds>t;
     if(!fut&&ds>=p.inizio){past++;if(i.ok)okN++;if(i.slot)slotN++;}
-    const cls=[i.ok?"ok":i.tot>0?"part":i.rest?"rest":"",fut?"fut":"",ds<p.inizio&&!i.tot?"pre":"",ds===t?"today":"",ds===ui.sel?"sel":"",i.slot?"slot":""].join(" ");
+    const cls=[i.more?"ok more":i.ok?"ok":i.tot>0?"part":i.rest?"rest":"",fut?"fut":"",ds<p.inizio&&!i.tot?"pre":"",ds===t?"today":"",ds===ui.sel?"sel":"",i.slot?"slot":""].join(" ");
     cells+=`<button class="d ${cls}" data-act="selday" data-d="${ds}" aria-label="${d} ${MESI[m-1]}${i.tot?", "+mins(i.tot)+" minuti":""}"><span class="c">${i.rest&&!i.tot?"R":d}</span><i></i></button>`;
   }
   const c=chain(),best=bestChain(),sel=parseD(ui.sel),si=dayInfo(ui.sel);
@@ -498,7 +501,7 @@ function vCostanza(){
   <section><div class="row sp"><div><div style="font-size:24px;text-transform:uppercase;line-height:1.05">${MESI[m-1]}</div><div class="mute" style="font-size:24px;line-height:1.05">${y}</div></div>
     <div class="monthnav"><button data-act="month" data-v="-1" aria-label="Mese prima">‹</button><button data-act="month" data-v="1" aria-label="Mese dopo">›</button></div></div>
     <div class="cal" style="margin-top:10px">${cells}</div>
-    <div class="legend"><span><i class="ok"></i>minimo fatto</span><span><i class="part"></i>meno del minimo</span><span><i class="today"></i>oggi</span><span><i class="slot"></i>prima delle ${p.slot}</span><span>R riposo</span></div>
+    <div class="legend"><span><i class="more"></i>${2*p.minimo}' o più</span><span><i class="ok"></i>minimo fatto</span><span><i class="part"></i>meno del minimo</span><span><i class="today"></i>oggi</span><span><i class="slot"></i>prima delle ${p.slot}</span><span>R riposo</span></div>
     ${past?`<p style="margin-top:14px"><b>${okN}/${past}</b> giorni col minimo · <b>${slotN}/${past}</b> nello slot</p>`:""}</section>
   <section><h2>${GG[sel.getDay()]} ${sel.getDate()} ${MESI[sel.getMonth()]}</h2>
     ${si.ss.length?si.work.map(sessHtml).join("")+(si.rest?`<p>Riposo ${si.restOk?"programmato":"(oltre il limite della settimana)"} · <button class="link" data-act="unrest" data-d="${ui.sel}">annulla</button></p>`:""):`<p class="mute">${ui.sel>t?"Ancora da vivere.":"Nessuna seduta."}</p>`}
@@ -569,7 +572,7 @@ function coachText(){
     `Minuti totali: ${mins(w.tot)}' · sedute: ${w.ss.length}`,
     `Concentrazione media: ${w.focus==null?"–":w.focus.toFixed(1)+"/3"} · "ero altrove" per seduta: ${w.distr==null?"–":w.distr.toFixed(1)}`,
     "Per blocco: "+(Object.entries(w.perBlock).map(([k,v])=>`${k} ${mins(v)}'`).join(" · ")||"–"),"","Giorno per giorno:"];
-  w.days.forEach((d,i)=>{const inf=w.infos[i];L.push(`- ${d}: ${inf.rest&&!inf.tot?"riposo":mins(inf.tot)+"'"}${inf.ok?" ✓":""}${inf.slot?" (slot)":""}`);});
+  w.days.forEach((d,i)=>{const inf=w.infos[i];L.push(`- ${d}: ${inf.rest&&!inf.tot?"riposo":mins(inf.tot)+"'"}${inf.more?" ✓ (doppio)":inf.ok?" ✓":""}${inf.slot?" (slot)":""}`);});
   L.push("","Esercizi:");
   exList().filter(e=>e.bpm).forEach(e=>{const hh=exHist(e.id);const wk7=hh.pts.filter(x=>x.data>=w.days[0]);if(wk7.length)L.push(`- ${e.nome}: ${wk7.map(x=>x.bpm).join(" → ")} BPM${hh.base?` (partenza ${hh.base.bpm})`:""}${e.obiettivo?` · obiettivo ${e.obiettivo}`:""}`);});
   const notes=w.ss.flatMap(s=>(s.blocchi||[]).filter(b=>b.nota).map(b=>`- ${s.data} · ${b.nome}: ${b.nota}`));
@@ -662,6 +665,8 @@ const ACT={
   focus:el=>{const b=cur();b.nota=($("#bnota")||{}).value||b.nota;b.focus=+el.dataset.v;saveLive();render();},
   next:()=>{const b=cur();b.nota=($("#bnota")||{}).value||"";b.done=true;LIVE.ending=false;
     if(LIVE.i<LIVE.blocchi.length-1){LIVE.i++;const nb=cur();nb.run=Date.now();saveLive();beep();render();scrollTo(0,0);}else finishLive();},
+  more:el=>{const b=cur(),d=blockOf(el.dataset.k);if(!d)return;b.nota=($("#bnota")||{}).value||"";b.done=true;LIVE.ending=false;
+    LIVE.blocchi.push(newBlock(d));LIVE.i=LIVE.blocchi.length-1;cur().run=Date.now();saveLive();beep();render();scrollTo(0,0);},
   closehere:()=>{if(confirm("Chiudere qui la seduta? Si salvano i minuti fatti finora."))finishLive();},
   abort:()=>{if(confirm("Annullare la seduta? Niente verrà salvato.")){Metro.stop();LIVE=null;saveLive();unwake();render();}},
   "stale-save":()=>finishLive(),
